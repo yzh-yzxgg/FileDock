@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 import uuid
 import os
 import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -14,10 +15,11 @@ def upload():
     file_ext = os.path.splitext(filename)[1]
     if file_ext != '.php':
         return 'File not allowed', 400
+    
     uuid_filename = uuid.uuid4().hex + file_ext
     conn = sqlite3.connect(database)
     c = conn.cursor()
-    c.execute('INSERT INTO uploads (filename) VALUES (?)', (uuid_filename,))
+    c.execute('INSERT INTO uploads (filename, uuid_filename, uploaded_time) VALUES (?, ?)', (filename, uuid_filename, unix_time))
     c.commit()
     conn.close()
     uploaded_file.save('uploads/' + uuid_filename)
