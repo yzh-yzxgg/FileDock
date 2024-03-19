@@ -10,12 +10,17 @@
   </head>
   <body>
     <div class="app">
+      <div class="flex column right">
+        {% include 'header.html' %}
+      </div>
       <div class="flex column center" style="flex-grow: 1;">
+        <img src="/static/favicon/favicon.png" alt="FileDock" style="width: 10%;margin: 100px;" >
+        <!-- <p style="font-family: '微软雅黑';font-size: 40px;color: #2185d0;">FileDock</p> -->
         <button class="massive ui button blue">
-          📤 发送
+          <p style="font-family: '微软雅黑';font-size: 15px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上传&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
         </button>
         <button class="massive ui button">
-          📥 接受
+          <p style="font-family: '微软雅黑';font-size: 15px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接收&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>   
         </button>
       </div>
       <div class="flex column right">
