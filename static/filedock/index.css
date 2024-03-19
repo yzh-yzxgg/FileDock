@@ -39,5 +39,9 @@ div.app div {
 
 button.ui.massive {
     margin: 10px;
-    /* box-shadow: 0px 0px 5px grey !important; */
+    box-shadow: 0px 4px 5px rgba(0,0,0,0.1) !important;
 }
+
+button.ui.massive:hover {
+    box-shadow: 0px 6px 8px rgba(0,0,0,0.2) !important;
+  }
