@@ -44,7 +44,7 @@ def get_group(group):
 @app.route('/api/v1/user/info', methods=['GET'])
 def user_info():
     try:
-        username = request.json['username']
+        username = request.json['uid']
     except KeyError:
         return {
             'code': 400,
@@ -55,7 +55,7 @@ def user_info():
         }
     conn = sqlite3.connect(database)
     c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE username=?', (username,))
+    c.execute('SELECT * FROM users WHERE uid=?', (username,))
     user = c.fetchone()
     conn.close()
     if user:
