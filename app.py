@@ -4,7 +4,7 @@ import sqlite3
 import uuid
 from datetime import datetime
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__)
 
@@ -437,6 +437,9 @@ def upload():
     conn.close()
     uploaded_file.save('uploads/' + uuid_filename)
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('static/favicon/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/')
 def index():
