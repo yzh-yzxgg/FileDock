@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html lang="zh_cn">
   <head>
-    <meta charset="utf-8">
-    <script src="/static/jquery/jquery.min.js"></script>
-    <script src="/static/semantic-ui/semantic.min.js"></script>
-    <link rel="stylesheet" href="/static/semantic-ui/semantic.min.css">
-    <link rel="stylesheet" href="/static/filedock/index.css">
-    <title>FileDock</title>
+    {% include 'head.html' %}
   </head>
   <body>
     <div class="app">
-      <div class="flex column right fullwidth">
+      <div class="flex flex-col items-end w-full">
         {% include 'header.html' %}
       </div>
-      <div class="flex column center" style="flex-grow: 1;">
-        <img src="/static/favicon/favicon.png" alt="FileDock" style="width: 10%;margin: 100px;" >
-        <!-- <p style="font-family: '微软雅黑';font-size: 40px;color: #2185d0;">FileDock</p> -->
-        <button class="massive ui button blue">
-          <p style="font-family: '微软雅黑';font-size: 15px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;上传&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+      <div class="flex flex-col flex-grow justify-center items-center">
+        <img
+          class="w-1/3 md:w-1/5 mb-8"
+          src="/static/favicon/favicon.png"
+          alt="FileDock"
+        />
+        <button class="massive ui button blue w-1/2 md:w-2/5">
+          <p class="text-xl">上传</p>
         </button>
-        <button class="massive ui button">
-          <p style="font-family: '微软雅黑';font-size: 15px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;接收&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>   
+        <button class="massive ui button w-1/2 md:w-2/5">
+          <p class="text-xl">接收</p>
         </button>
       </div>
-      <div class="flex column right fullwidth">
+      <div class="flex flex-col items-end w-full">
         {% include 'footer.html' %}
       </div>
     </div>
-    
   </body>
 </html>
