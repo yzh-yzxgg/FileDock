@@ -3,25 +3,8 @@ html,body {
     padding: 5px;
 }
 
-.flex {
-    display: flex;
-}
-
-.column {
-    flex-direction: column;
-}
-
-.left {
-    align-items: flex-start;
-}
-
-.right {
-    align-items: flex-end;
-}
-
-.center {
-    align-items: center;
-    justify-content: center;
+.hidden {
+    display: none !important;
 }
 
 div.app {
@@ -31,10 +14,6 @@ div.app {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.fullwidth {
-    width: 100%;
 }
 
 button.ui.massive {

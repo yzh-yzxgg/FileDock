@@ -41,7 +41,7 @@ def get_group(group):
         }
 
 
-@app.route('/api/v1/user/info', methods=['GET'])
+@app.route('/api/v1/user/info', methods=['POST'])
 def user_info():
     try:
         username = request.json['uid']
@@ -424,7 +424,7 @@ def user_changepass():
     }
 
 
-@app.route('/api/v1/session/verify', methods=['GET'])
+@app.route('/api/v1/session/verify', methods=['POST'])
 def session_verify():
     try:
         session_id = request.json['session_id']
@@ -463,7 +463,7 @@ def upload():
     file_ext = os.path.splitext(filename)[1]
     if file_ext != '.php':
         return 'File not allowed', 400
-
+    
     uuid_filename = uuid.uuid4().hex + file_ext
     conn = sqlite3.connect(database)
     c = conn.cursor()
