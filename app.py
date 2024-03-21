@@ -441,6 +441,10 @@ def upload():
 def favicon():
     return send_file('static/favicon/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
 @app.route('/')
 def index():
     return render_template('index.html')

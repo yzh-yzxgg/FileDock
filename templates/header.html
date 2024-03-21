@@ -1,16 +1,59 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <script src="/static/jquery/jquery.min.js"></script>
-    <script src="/static/semantic-ui/semantic.min.js"></script>
-    <link rel="stylesheet" href="/static/semantic-ui/semantic.min.css">
-    <link rel="stylesheet" href="/static/filedock/index.css">
-    <title>FileDock</title>
-  </head>
-  <body>
-    <div class="ui icon top right pointing dropdown button">
-        <i class="dd"></i>
-    </div>
-  </body>
-</html>
+<script>
+  function setCookie(uid,session_id){
+    document.cookie = "uid="+uid+"; "+"session_id="+session_id;
+  }
+  function getCookie(cname){
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+    }
+    return "";
+  }
+  function get_user(uid){
+    var settings = {
+      "url": "http://127.0.0.1:5000/api/v1/user/info",
+      "method": "GET",
+      "timeout": 0,
+      "headers": {
+          "Content-Type": "application/json"
+      },
+      "data": JSON.stringify({
+          "uid": uid
+      }),
+    };
+
+    $.ajax(settings).done(function (response) {
+      console.log(response);
+      if(response.success){
+        return response;
+      }
+      return false
+    });
+  }
+  function change_say_hello(){
+    username=get_user(getCookie(uid)).data.username;
+    document.getElementById("say_hello_username").innerHTML=username;
+  }
+</script>
+
+<div class="ui icon top right pointing dropdown button">
+  <i class="user circle icon"></i>
+  <div class="menu">
+    <div id="say_hello_username" class="header"></div>
+    <div id="login_button" class="item">登录</div>
+    <script>
+      document.getElementById("login_button").addEventListener("click", function()
+      {
+        window.location.href="/login"
+      });
+    </script>
+    <div id="exit_button" class="item">退出</div>  
+  </div>
+</div>
+<script>
+  $('.ui.dropdown')
+    .dropdown()
+  ;
+</script>

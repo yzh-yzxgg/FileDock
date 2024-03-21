@@ -33,7 +33,7 @@ div.app {
     justify-content: center;
 }
 
-div.app div {
+.fullwidth {
     width: 100%;
 }
 
@@ -44,4 +44,4 @@ button.ui.massive {
 
 button.ui.massive:hover {
     box-shadow: 0px 6px 8px rgba(0,0,0,0.2) !important;
-  }
+}
