@@ -265,6 +265,7 @@ def user_delete():
         }
     }
 
+
 @app.route('/api/v1/user/list', methods=['GET'])
 def user_list():
     try:
@@ -312,6 +313,7 @@ def user_list():
             'group': user[3]
         })
     return ret
+
 
 @app.route('/api/v1/user/update', methods=['POST'])
 def user_update():
@@ -367,6 +369,7 @@ def user_update():
         }
     }
 
+
 @app.route('/api/v1/user/changepass', methods=['POST'])
 def user_changepass():
     try:
@@ -420,6 +423,39 @@ def user_changepass():
         }
     }
 
+
+@app.route('/api/v1/session/verify', methods=['GET'])
+def session_verify():
+    try:
+        session_id = request.json['session_id']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }
+    if session_id in session:
+        return {
+            'code': 200,
+            'success': True,
+            'data': {
+                'uid': session[session_id]['uid'],
+                'username': session[session_id]['username'],
+                'group': get_user_group(session_id)
+            }
+        }
+    else:
+        return {
+            'code': 401,
+            'success': False,
+            'data': {
+                'message': 'Invalid session ID'
+            }
+        }
+
+
 @app.route('/api/v1/upload', methods=['POST'])
 def upload():
     uploaded_file = request.files['file']
@@ -437,13 +473,16 @@ def upload():
     conn.close()
     uploaded_file.save('uploads/' + uuid_filename)
 
+
 @app.route('/favicon.ico')
 def favicon():
     return send_file('static/favicon/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+
 @app.route('/login')
 def login():
     return render_template('login.html')
+
 
 @app.route('/')
 def index():
