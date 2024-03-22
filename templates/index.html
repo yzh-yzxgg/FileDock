@@ -34,10 +34,10 @@
           <div id="login_button" class="item">登录</div>
           <div id="exit_button" class="item">退出</div>
           <script>
-            $("#login_button")[0].addEventListener("click", function () {
+            $("#login_button")[0].addEventListener("click",  ()=> {
               window.location.href = "/login"
             });
-            $("#exit_button")[0].addEventListener("click", function() {
+            $("#exit_button")[0].addEventListener("click", () =>{
               user_exit($.cookie(''));
               $.removeCookie('uid');
               $.removeCookie('session_id');
