@@ -1,20 +1,29 @@
 import hashlib
-import os
+import json
+import random
 import sqlite3
 import uuid
 from datetime import datetime
 
-from flask import Flask, render_template, request, send_file
+from flask import Flask, request, send_file, render_template
+from flask_uploads import UploadSet, ALL, configure_uploads, \
+    patch_request_class  # pip install git+https://github.com/riad-azz/flask-uploads
+
+with open('config.json', 'r') as f:
+    config = json.load(f)
 
 app = Flask(__name__)
+app.secret_key = config['secret_key']
+database = config['database']
 
-database = "database.db"
+app.config['UPLOADED_FILES_DEST'] = config['upload_folder']
+files = UploadSet('fileInput', ALL)
+configure_uploads(app, files)
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * config['max_content_length']
+patch_request_class(app, 32 * 1024 * config['max_content_length'])
 
 session = {}
-
-
-def get_unix_time():
-    return datetime.now().timestamp()
+downloads_tasks = {}
 
 
 def get_user_group(session_id):
@@ -39,6 +48,10 @@ def get_group(group):
             'operations': True if group[1] == 1 else False,
             'max_size:': group[2]
         }
+
+
+def get_unix_time():
+    return datetime.now().timestamp()
 
 
 @app.route('/api/v1/user/login', methods=['POST'])
@@ -456,22 +469,56 @@ def session_verify():
         }
 
 
-@app.route('/api/v1/files', methods=['POST'])
-def upload():
-    uploaded_file = request.files['file']
-    filename = uploaded_file.filename
-    file_ext = os.path.splitext(filename)[1]
-    if file_ext != '.php':
-        return 'File not allowed', 400
-
-    uuid_filename = uuid.uuid4().hex + file_ext
+@app.route('/api/v1/files/upload', methods=['POST'])
+def files_create():
+    try:
+        session_id = request.headers['X-Session-ID']
+        keep_time = request.form['keep_time']
+        receive_user = request.form['receive_user']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }
+    if session_id not in session:
+        return {
+            'code': 401,
+            'success': False,
+            'data': {
+                'message': 'Invalid session ID'
+            }
+        }
+    fileuuid = uuid.uuid4().hex
+    filename = request.files['fileInput'].filename
+    filestorage = files.save(request.files['fileInput'], name=fileuuid)
+    # save to database
     conn = sqlite3.connect(database)
+    code = random.randint(100000, 999999)
     c = conn.cursor()
-    c.execute('INSERT INTO uploads (filename, uuid_filename, uploaded_time) VALUES (?, ?)',
-              (filename, uuid_filename, get_unix_time()))
+    c.execute('SELECT * FROM uploads WHERE code=?', (code,))
+    while c.fetchone():
+        code = random.randint(100000, 999999)
+    c.execute(
+        'INSERT INTO uploads (uuid, filename, code, upload_time, keep_time, upload_user, receive_user) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (fileuuid, filename, code, get_unix_time(), keep_time, session[session_id]['uid'], receive_user))
     conn.commit()
     conn.close()
-    uploaded_file.save('uploads/' + uuid_filename)
+    return {
+        'code': 201,
+        'success': True,
+        'data': {
+            'uuid': fileuuid,
+            'filename': filename,
+            'code': code,
+            'upload_time': get_unix_time(),
+            'keep_time': keep_time,
+            'upload_user': session[session_id]['uid'],
+            'receive_user': receive_user
+        }
+    }
 
 
 @app.route('/favicon.ico')

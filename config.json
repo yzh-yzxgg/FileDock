@@ -1,0 +1,8 @@
+{
+    "secret_key": "ReplaceWithYourSecretKey",
+    "database": "database.db",
+    "uploads": {
+        "upload_folder": "./uploads",
+        "max_content_length": 2048
+    }
+}
