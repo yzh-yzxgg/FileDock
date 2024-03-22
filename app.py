@@ -41,43 +41,6 @@ def get_group(group):
         }
 
 
-@app.route('/api/v1/user/info', methods=['POST'])
-def user_info():
-    try:
-        username = request.json['uid']
-    except KeyError:
-        return {
-            'code': 400,
-            'success': False,
-            'data': {
-                'message': 'Invalid request'
-            }
-        }
-    conn = sqlite3.connect(database)
-    c = conn.cursor()
-    c.execute('SELECT * FROM users WHERE uid=?', (username,))
-    user = c.fetchone()
-    conn.close()
-    if user:
-        return {
-            'code': 200,
-            'success': True,
-            'data': {
-                'uid': user[0],
-                'username': user[1],
-                'group': user[3],
-            }
-        }
-    else:
-        return {
-            'code': 404,
-            'success': False,
-            'data': {
-                'message': 'User not found'
-            }
-        }
-
-
 @app.route('/api/v1/user/login', methods=['POST'])
 def user_login():
     try:
@@ -127,7 +90,7 @@ def user_login():
 @app.route('/api/v1/user/logout', methods=['POST'])
 def user_logout():
     try:
-        session_id = request.json['session_id']
+        session_id = request.headers['X-Session-ID']
     except KeyError:
         return {
             'code': 400,
@@ -155,10 +118,47 @@ def user_logout():
         }
 
 
+@app.route('/api/v1/user/info', methods=['POST'])
+def user_info():
+    try:
+        username = request.json['uid']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('SELECT * FROM users WHERE uid=?', (username,))
+    user = c.fetchone()
+    conn.close()
+    if user:
+        return {
+            'code': 200,
+            'success': True,
+            'data': {
+                'uid': user[0],
+                'username': user[1],
+                'group': user[3],
+            }
+        }
+    else:
+        return {
+            'code': 404,
+            'success': False,
+            'data': {
+                'message': 'User not found'
+            }
+        }
+
+
 @app.route('/api/v1/user/create', methods=['POST'])
 def user_create():
     try:
-        session_id = request.json['session_id']
+        session_id = request.headers['X-Session-ID']
         username = request.json['userdata']['username']
         password = request.json['userdata']['password']
         group = request.json['userdata']['group']
@@ -214,10 +214,59 @@ def user_create():
     }
 
 
+@app.route('/api/v1/user/list', methods=['GET'])
+def user_list():
+    try:
+        session_id = request.headers['X-Session-ID']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }
+    if session_id not in session:
+        return {
+            'code': 401,
+            'success': False,
+            'data': {
+                'message': 'Invalid session ID'
+            }
+        }
+    if not get_group(get_user_group(session_id))['operations']:
+        return {
+            'code': 403,
+            'success': False,
+            'data': {
+                'message': 'Not allowed'
+            }
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('SELECT * FROM users')
+    users = c.fetchall()
+    conn.close()
+    ret = {
+        'code': 200,
+        'success': True,
+        'data': {
+            'users': []
+        }
+    }
+    for user in users:
+        ret['data']['users'].append({
+            'uid': user[0],
+            'username': user[1],
+            'group': user[3]
+        })
+    return ret
+
+
 @app.route('/api/v1/user/delete', methods=['POST'])
 def user_delete():
     try:
-        session_id = request.json['session_id']
+        session_id = request.headers['X-Session-ID']
         uid = request.json['uid']
     except KeyError:
         return {
@@ -266,59 +315,10 @@ def user_delete():
     }
 
 
-@app.route('/api/v1/user/list', methods=['GET'])
-def user_list():
-    try:
-        session_id = request.json['session_id']
-    except KeyError:
-        return {
-            'code': 400,
-            'success': False,
-            'data': {
-                'message': 'Invalid request'
-            }
-        }
-    if session_id not in session:
-        return {
-            'code': 401,
-            'success': False,
-            'data': {
-                'message': 'Invalid session ID'
-            }
-        }
-    if not get_group(get_user_group(session_id))['operations']:
-        return {
-            'code': 403,
-            'success': False,
-            'data': {
-                'message': 'Not allowed'
-            }
-        }
-    conn = sqlite3.connect(database)
-    c = conn.cursor()
-    c.execute('SELECT * FROM users')
-    users = c.fetchall()
-    conn.close()
-    ret = {
-        'code': 200,
-        'success': True,
-        'data': {
-            'users': []
-        }
-    }
-    for user in users:
-        ret['data']['users'].append({
-            'uid': user[0],
-            'username': user[1],
-            'group': user[3]
-        })
-    return ret
-
-
 @app.route('/api/v1/user/update', methods=['POST'])
 def user_update():
     try:
-        session_id = request.json['session_id']
+        session_id = request.headers['X-Session-ID']
         uid = request.json['uid']
         username = request.json['userdata']['username']
         group = request.json['userdata']['group']
@@ -373,7 +373,7 @@ def user_update():
 @app.route('/api/v1/user/changepass', methods=['POST'])
 def user_changepass():
     try:
-        session_id = request.json['session_id']
+        session_id = request.headers['X-Session-ID']
         uid = request.json['uid']
         password = request.json['password']
     except KeyError:
@@ -424,10 +424,10 @@ def user_changepass():
     }
 
 
-@app.route('/api/v1/session/verify', methods=['POST'])
+@app.route('/api/v1/session/verify', methods=['GET'])
 def session_verify():
     try:
-        session_id = request.json['session_id']
+        session_id = request.headers['X-Session-ID']
     except KeyError:
         return {
             'code': 400,
@@ -456,14 +456,14 @@ def session_verify():
         }
 
 
-@app.route('/api/v1/upload', methods=['POST'])
+@app.route('/api/v1/files', methods=['POST'])
 def upload():
     uploaded_file = request.files['file']
     filename = uploaded_file.filename
     file_ext = os.path.splitext(filename)[1]
     if file_ext != '.php':
         return 'File not allowed', 400
-    
+
     uuid_filename = uuid.uuid4().hex + file_ext
     conn = sqlite3.connect(database)
     c = conn.cursor()
