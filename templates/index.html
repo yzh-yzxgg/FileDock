@@ -17,6 +17,23 @@
                 console.log(response);
             });
         }
+        function uploadFile() {
+            var formData = new FormData();
+            formData.append('file', $('#fileInput')[0].files[0]);
+        
+            $.ajax({
+              url: '/api/v1/files/upload',
+              method: 'POST',
+              headers: {
+                'X-Session-ID': $.cookie("session_id")
+              },
+              data: formData,
+              processData: false,
+              contentType: false
+            }).done((response) => {
+              console.log(response);
+            });
+        }
     </script>
 </head>
 
@@ -48,6 +65,17 @@
         <button class="massive ui button blue w-1/2 md:w-2/5 text-xl">
             上传
         </button>
+        <div id="upload_modal" class="ui modal">
+          <div class="header">
+            <i aria-hidden="true" class="close icon"></i>
+          </div>
+          <div class="content">
+            <input type="file" id="fileInput">
+          </div>
+        </div>
+        <script>
+          $('#upload_modal').modal('show');
+        </script>   
         <button class="massive ui button w-1/2 md:w-2/5 text-xl">
             接收
         </button>
