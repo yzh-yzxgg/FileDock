@@ -16,11 +16,11 @@ app = Flask(__name__)
 app.secret_key = config['secret_key']
 database = config['database']
 
-app.config['UPLOADED_FILES_DEST'] = config['upload_folder']
+app.config['UPLOADED_FILEINPUT_DEST'] = config['uploads']['upload_folder']
 files = UploadSet('fileInput', ALL)
 configure_uploads(app, files)
-app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * config['max_content_length']
-patch_request_class(app, 32 * 1024 * config['max_content_length'])
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * config['uploads']['max_content_length']
+patch_request_class(app, 32 * 1024 * config['uploads']['max_content_length'])
 
 session = {}
 downloads_tasks = {}
@@ -534,3 +534,5 @@ def login():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+app.run()
