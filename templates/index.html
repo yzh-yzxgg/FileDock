@@ -2,43 +2,52 @@
 <html lang="zh_cn">
 
 <head>
-    {% include 'head.html' %}
-    <script>
-        function user_exit(session_id) {
-            $.ajax({
-                "url": "/api/v1/user/logout",
-                "method": "POST",
-                "timeout": 0,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "X-Session-ID": session_id
-                }
-            }).done((response) => {
-                console.log(response);
-            });
+  {% include 'head.html' %}
+  <script>
+    function user_exit(session_id) {
+      $.ajax({
+        "url": "/api/v1/user/logout",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Session-ID": session_id
         }
-        function uploadFile() {
-            var formData = new FormData();
-            formData.append('file', $('#fileInput')[0].files[0]);
-        
-            $.ajax({
-              url: '/api/v1/files/upload',
-              method: 'POST',
-              headers: {
-                'X-Session-ID': $.cookie("session_id")
-              },
-              data: formData,
-              processData: false,
-              contentType: false
-            }).done((response) => {
-              console.log(response);
-            });
+      }).done((response) => {
+        console.log(response);
+      });
+    }
+    function uploadFile() {
+      fileInput = document.getElementById('fileInput');
+      file = fileInput.files[0];
+      file_name = file.name;
+      formData = new FormData();
+      formData.append('fileInput', file);
+      formData.append('keep_time', -1);
+      formData.append('receive_user', 0);
+      console.log(file_name);
+      $.ajax({
+        url: '/api/v1/files/upload',
+        method: 'POST',
+        headers: {
+          'X-Session-ID': $.cookie("session_id"),
+        },
+        data: formData,
+        processData: false,
+        contentType: false,
+      }).done((response) => {
+        if(response.success) {
+          code = response.data.code; // 6位码
+          $("#file_name_dispaly")[0].innerText = "已上传：" + file_name;
+          console.log(response);
         }
-    </script>
+      });
+    }
+  </script>
 </head>
 
 <body>
-<div class="app">
+  <div class="app">
     <div class="flex flex-col items-end w-full">
       <div class="ui icon top right pointing dropdown button">
         <i class="user circle icon"></i>
@@ -47,10 +56,10 @@
           <div id="login_button" class="item">登录</div>
           <div id="exit_button" class="item">退出</div>
           <script>
-            $("#login_button")[0].addEventListener("click",  ()=> {
+            $("#login_button")[0].addEventListener("click", () => {
               window.location.href = "/login"
             });
-            $("#exit_button")[0].addEventListener("click", () =>{
+            $("#exit_button")[0].addEventListener("click", () => {
               user_exit($.cookie(''));
               $.removeCookie('uid');
               $.removeCookie('session_id');
@@ -61,74 +70,92 @@
       </div>
     </div>
     <div class="flex flex-col flex-grow justify-center items-center">
-        <img class="w-1/3 md:w-1/5 mb-8" src="/static/favicon/favicon.png" alt="FileDock"/>
-        <button class="massive ui button blue w-1/2 md:w-2/5 text-xl">
-            上传
-        </button>
-        <div id="upload_modal" class="ui modal">
-          <div class="header">
-            <i aria-hidden="false" class="close icon"></i>
-          </div>
-          <div class="content">
-            <input type="file" id="fileInput">
-          </div>
+      <img class="w-1/3 md:w-1/5 mb-8" src="/static/favicon/favicon.png" alt="FileDock" />
+      <input type="file" id="fileInput" style="opacity: 0;">
+      <button id="upload_button" class="massive ui button blue w-1/2 md:w-2/5 text-xl">
+        上传
+      </button>
+      <div id="upload_modal" class="ui modal">
+        <div class="header">
+          <button id="upload_modal_close_button" class="close icon button"">
+              <i class=" close icon"></i>
+          </button>
         </div>
-        <script>
+        <div class="content">
+          <table class="ui very basic table">
+            <tbody>
+              <tr><th id="file_name_dispaly"></th></tr>
+            </tbody>
+          </table>
+          <div class="code_display">123456</div>
+        </div>
+      </div>
+      <script>
+        $('#upload_modal').modal('show');
+        $("#upload_button")[0].addEventListener("click", () => {
+          $('#fileInput').click();
+        });
+        $('#fileInput').on('change', () => {
+          uploadFile();
           $('#upload_modal').modal('show');
-        </script>   
-        <button class="massive ui button w-1/2 md:w-2/5 text-xl">
-            接收
-        </button>
+        });
+        $("#upload_modal_close_button")[0].addEventListener("click", () => {
+          $('#upload_modal').modal('hide');
+        });
+      </script>
+      <button class="massive ui button w-1/2 md:w-2/5 text-xl">
+        接收
+      </button>
     </div>
     <div class="flex flex-col items-end w-full">
-        {% include 'footer.html' %}
+      {% include 'footer.html' %}
     </div>
-</div>
-<script>
+  </div>
+  <script>
     $('.ui.dropdown')
-        .dropdown()
-    ;
+      .dropdown()
+      ;
 
     function display_username() {
-        disname_obj = $('#display_username')[0];
-        disname_obj.classList.remove('hidden');
-        disname_obj.classList.add('font-bold');
-        $.ajax({
-            "url": "/api/v1/user/info",
-            "method": "POST",
-            "timeout": 0,
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "data": JSON.stringify({
-                "uid": $.cookie('uid')
-            }),
-        }).done(function (response) {
-            if (response.success) {
-                console.log(response)
-                $("#display_username")[0].innerText = response.data.username;
-            }
-        });
+      disname_obj = $('#display_username')[0];
+      disname_obj.classList.remove('hidden');
+      disname_obj.classList.add('font-bold');
+      $.ajax({
+        "url": "/api/v1/user/info",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "data": JSON.stringify({
+          "uid": $.cookie('uid')
+        }),
+      }).done(function (response) {
+        if (response.success) {
+          console.log(response)
+          $("#display_username")[0].innerText = response.data.username;
+        }
+      });
     }
 
     session_id = $.cookie('session_id');
     if (session_id) {
-        $.ajax({
-            "url": "/api/v1/session/verify",
-            "method": "GET",
-            "timeout": 0,
-            "headers": {
-                "Content-Type": "application/json",
-                "X-Session-ID": session_id
-            }
-        }).done((response) => {
-            if (response.success) {
-                $('#login_button')[0].classList.add('hidden');
-                display_username();
-            }
-        });
+      $.ajax({
+        "url": "/api/v1/session/verify",
+        "method": "GET",
+        "timeout": 0,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Session-ID": session_id
+        }
+      }).done((response) => {
+        if (response.success) {
+          $('#login_button')[0].classList.add('hidden');
+          display_username();
+        }
+      });
     }
-</script>
+  </script>
 </body>
 
 </html>

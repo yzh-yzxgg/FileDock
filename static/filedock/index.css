@@ -24,3 +24,12 @@ button.ui.massive {
 button.ui.massive:hover {
     box-shadow: 0px 6px 8px rgba(0,0,0,0.2) !important;
 }
+
+.code_display {
+    font-size: 40px; /* 设置字号为30 */
+    text-align: center; /* 文字居中 */
+    font-weight: bold;
+    /* 如果你想要在页面的垂直方向上也居中，可以添加更多的样式 */
+    display: flex;
+    justify-content: center; /* 水平居中 */
+}
