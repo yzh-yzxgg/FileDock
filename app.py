@@ -51,7 +51,15 @@ def get_group(group):
 
 
 def get_unix_time():
-    return datetime.now().timestamp()
+    return int(datetime.now().timestamp())
+
+def get_user_ip(request):
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers['X-Forwarded-For']
+    elif request.headers.get('X-Real-Ip'):
+        return request.headers['X-Real-Ip']
+    else:
+        return request.remote_addr
 
 
 @app.route('/api/v1/user/login', methods=['POST'])
@@ -472,7 +480,6 @@ def session_verify():
 @app.route('/api/v1/files/upload', methods=['POST'])
 def files_create():
     try:
-        session_id = request.headers['X-Session-ID']
         keep_time = request.form['keep_time']
         receive_user = request.form['receive_user']
     except KeyError:
@@ -483,18 +490,22 @@ def files_create():
                 'message': 'Invalid request'
             }
         }, 400
-    if session_id not in session:
-        return {
-            'code': 401,
-            'success': False,
-            'data': {
-                'message': 'Invalid session ID'
-            }
-        }, 401
+    try:
+        session_id = request.headers['X-Session-ID']
+        if session_id not in session:
+            return {
+                'code': 401,
+                'success': False,
+                'data': {
+                    'message': 'Invalid session ID'
+                }
+            }, 401
+        uid = session[session_id]['uid']
+    except KeyError:
+        uid = -1 # Anonymous
     fileuuid = uuid.uuid4().hex
     filename = request.files['fileInput'].filename
     filestorage = files.save(request.files['fileInput'], name=fileuuid)
-    # save to database
     conn = sqlite3.connect(database)
     code = random.randint(100000, 999999)
     c = conn.cursor()
@@ -503,7 +514,7 @@ def files_create():
         code = random.randint(100000, 999999)
     c.execute(
         'INSERT INTO uploads (uuid, filename, code, upload_time, keep_time, upload_user, receive_user) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (fileuuid, filename, code, get_unix_time(), keep_time, session[session_id]['uid'], receive_user))
+        (fileuuid, filename, code, get_unix_time(), keep_time, uid, receive_user))
     conn.commit()
     conn.close()
     return {
@@ -515,7 +526,7 @@ def files_create():
             'code': code,
             'upload_time': get_unix_time(),
             'keep_time': keep_time,
-            'upload_user': session[session_id]['uid'],
+            'upload_user': uid,
             'receive_user': receive_user
         }
     }, 201
