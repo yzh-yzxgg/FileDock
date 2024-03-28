@@ -66,7 +66,7 @@ def user_login():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     password = hashlib.sha256(password.encode()).hexdigest()
     conn = sqlite3.connect(database)
     c = conn.cursor()
@@ -89,7 +89,7 @@ def user_login():
                 'username': user[1],
                 'group': user[3]
             }
-        }
+        }, 200
     else:
         return {
             'code': 404,
@@ -97,7 +97,7 @@ def user_login():
             'data': {
                 'message': 'Invalid username or password'
             }
-        }
+        }, 404
 
 
 @app.route('/api/v1/user/logout', methods=['POST'])
@@ -111,7 +111,7 @@ def user_logout():
             'data': {
                 'message': 'Invalid request '
             }
-        }
+        }, 400
     if session_id in session:
         del session[session_id]
         return {
@@ -120,7 +120,7 @@ def user_logout():
             'data': {
                 'message': 'Logged out'
             }
-        }
+        }, 200
     else:
         return {
             'code': 401,
@@ -128,7 +128,7 @@ def user_logout():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
 
 
 @app.route('/api/v1/user/info', methods=['POST'])
@@ -142,7 +142,7 @@ def user_info():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE uid=?', (username,))
@@ -157,7 +157,7 @@ def user_info():
                 'username': user[1],
                 'group': user[3],
             }
-        }
+        }, 200
     else:
         return {
             'code': 404,
@@ -165,7 +165,7 @@ def user_info():
             'data': {
                 'message': 'User not found'
             }
-        }
+        }, 404
 
 
 @app.route('/api/v1/user/create', methods=['POST'])
@@ -182,7 +182,7 @@ def user_create():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     if session_id not in session:
         return {
             'code': 401,
@@ -190,7 +190,7 @@ def user_create():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
     if not get_group(get_user_group(session_id))['operations']:
         return {
             'code': 403,
@@ -198,7 +198,7 @@ def user_create():
             'data': {
                 'message': 'Not allowed'
             }
-        }
+        }, 403
     password = hashlib.sha256(password.encode()).hexdigest()
     conn = sqlite3.connect(database)
     c = conn.cursor()
@@ -210,7 +210,7 @@ def user_create():
             'data': {
                 'message': 'Username already exists'
             }
-        }
+        }, 409
     new_uid = c.execute('SELECT MAX(uid) FROM users').fetchone()[0] + 1
     c.execute('INSERT INTO users (uid, username, password, "group") VALUES (?, ?, ?, ?)',
               (new_uid, username, password, group))
@@ -224,7 +224,7 @@ def user_create():
             'username': username,
             'group': group
         }
-    }
+    }, 201
 
 
 @app.route('/api/v1/user/list', methods=['GET'])
@@ -238,7 +238,7 @@ def user_list():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     if session_id not in session:
         return {
             'code': 401,
@@ -246,7 +246,7 @@ def user_list():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
     if not get_group(get_user_group(session_id))['operations']:
         return {
             'code': 403,
@@ -254,7 +254,7 @@ def user_list():
             'data': {
                 'message': 'Not allowed'
             }
-        }
+        }, 403
     conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('SELECT * FROM users')
@@ -273,7 +273,7 @@ def user_list():
             'username': user[1],
             'group': user[3]
         })
-    return ret
+    return ret, 200
 
 
 @app.route('/api/v1/user/delete', methods=['POST'])
@@ -288,7 +288,7 @@ def user_delete():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     if session_id not in session:
         return {
             'code': 401,
@@ -296,7 +296,7 @@ def user_delete():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
     if not get_group(get_user_group(session_id))['operations']:
         return {
             'code': 403,
@@ -304,7 +304,7 @@ def user_delete():
             'data': {
                 'message': 'Not allowed'
             }
-        }
+        }, 403
     conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE uid=?', (uid,))
@@ -315,7 +315,7 @@ def user_delete():
             'data': {
                 'message': 'User not found'
             }
-        }
+        }, 404
     c.execute('DELETE FROM users WHERE uid=?', (uid,))
     conn.commit()
     conn.close()
@@ -325,7 +325,7 @@ def user_delete():
         'data': {
             'message': 'User deleted'
         }
-    }
+    }, 200
 
 
 @app.route('/api/v1/user/update', methods=['POST'])
@@ -342,7 +342,7 @@ def user_update():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     if session_id not in session:
         return {
             'code': 401,
@@ -350,7 +350,7 @@ def user_update():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
     if not get_group(get_user_group(session_id))['operations']:
         return {
             'code': 403,
@@ -358,7 +358,7 @@ def user_update():
             'data': {
                 'message': 'Not allowed'
             }
-        }
+        }, 403
     conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE uid=?', (uid,))
@@ -369,7 +369,7 @@ def user_update():
             'data': {
                 'message': 'User not found'
             }
-        }
+        }, 404
     c.execute('UPDATE users SET username=? WHERE uid=?', (username, uid))
     c.execute('UPDATE users SET "group"=? WHERE uid=?', (group, uid))
     conn.commit()
@@ -380,7 +380,7 @@ def user_update():
         'data': {
             'message': 'User updated'
         }
-    }
+    }, 200
 
 
 @app.route('/api/v1/user/changepass', methods=['POST'])
@@ -396,7 +396,7 @@ def user_changepass():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     if session_id not in session:
         return {
             'code': 401,
@@ -404,7 +404,7 @@ def user_changepass():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
     if not get_group(get_user_group(session_id))['operations'] and session[session_id]['uid'] != uid:
         return {
             'code': 403,
@@ -412,7 +412,7 @@ def user_changepass():
             'data': {
                 'message': 'Not allowed'
             }
-        }
+        }, 403
     password = hashlib.sha256(password.encode()).hexdigest()
     conn = sqlite3.connect(database)
     c = conn.cursor()
@@ -424,7 +424,7 @@ def user_changepass():
             'data': {
                 'message': 'User not found'
             }
-        }
+        }, 404
     c.execute('UPDATE users SET password=? WHERE uid=?', (password, uid))
     conn.commit()
     conn.close()
@@ -434,7 +434,7 @@ def user_changepass():
         'data': {
             'message': 'Password changed'
         }
-    }
+    }, 200
 
 
 @app.route('/api/v1/session/verify', methods=['GET'])
@@ -458,7 +458,7 @@ def session_verify():
                 'username': session[session_id]['username'],
                 'group': get_user_group(session_id)
             }
-        }
+        }, 200
     else:
         return {
             'code': 401,
@@ -466,7 +466,7 @@ def session_verify():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
 
 
 @app.route('/api/v1/files/upload', methods=['POST'])
@@ -482,7 +482,7 @@ def files_create():
             'data': {
                 'message': 'Invalid request'
             }
-        }
+        }, 400
     if session_id not in session:
         return {
             'code': 401,
@@ -490,7 +490,7 @@ def files_create():
             'data': {
                 'message': 'Invalid session ID'
             }
-        }
+        }, 401
     fileuuid = uuid.uuid4().hex
     filename = request.files['fileInput'].filename
     filestorage = files.save(request.files['fileInput'], name=fileuuid)
@@ -518,7 +518,7 @@ def files_create():
             'upload_user': session[session_id]['uid'],
             'receive_user': receive_user
         }
-    }
+    }, 201
 
 
 @app.route('/favicon.ico')
