@@ -75,7 +75,7 @@
           上传
         </button>
         <button class="massive ui button w-1/2 md:w-2/5 text-xl">接收</button>
-        <div id="upload_modal" class="ui modal">
+        <div id="upload_modal" class="ui modal square mydimmer">
           <div class="header">
             <button id="upload_modal_close_button" class="close icon button">
               <i class="close icon"></i>
@@ -83,10 +83,10 @@
           </div>
           <div class="content">
             <div class="flex flex-col items-center">
-              <p class="text-xl font-bold mb-2">您的文件 <span id="file_name_dispaly"></span> 已成功上传</p>
-              <p>您的取件码：</p>
-              <div class="code_display m-3 font-bold">123456</div>
-              <p>接收文件时请输入此取件码。</p>
+              <p class="text-xl font-bold mb-20">您的文件 <span id="file_name_dispaly"></span> 已成功上传</p>
+              <p class="mb-6">您的取件码：</p>
+              <div class="code_display mb-24 font-bold">123456</div>
+              <p class="m-10">接收文件时请输入此取件码。</p>
             </div>
           </div>
         </div>
@@ -107,6 +107,13 @@
       });
     </script>
     <script>
+      $('#upload_modal')
+        .modal({
+          // 在这里配置 Modal 的参数
+          blurring: true, // 设置为true可以让背景模糊，而不是变暗
+          observeChanges: true, // 监听内容变化，确保Modal大小适配
+        })
+        .modal('show'); // 显示Modal
       $("#upload_button")[0].addEventListener("click", () => {
         $("#fileInput").click();
       });
