@@ -84,6 +84,7 @@ VALUES ('operator', 1, 512);""",
     c = conn.cursor()
     for sentence in sqlite:
         c.execute(sentence)
+    conn.commit()
     conn.close()
     print(f"Successfully execute {len(sqlite)} queries.")
 
@@ -96,7 +97,8 @@ VALUES ('operator', 1, 512);""",
     conn = sqlite3.connect(database)
     c = conn.cursor()
     c.execute("""INSERT INTO users (uid, username, password)
-VALUES (0, ?, ?);""", (username,password,))
+    VALUES (0, ?, ?);""", (username,password,))
+    conn.commit()
     conn.close()
     print("Successfully registered user with UID 0.")
 
