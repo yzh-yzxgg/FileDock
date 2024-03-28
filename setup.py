@@ -84,7 +84,7 @@ except:
     c = conn.cursor()
     for sentence in sqlite:
         c.execute(sentence)
-    c.close()
+    conn.commit()
     conn.close()
     print(f"Successfully execute {len(sqlite)} queries.")
 
@@ -98,7 +98,7 @@ except:
     c = conn.cursor()
     c.execute("""INSERT INTO users (uid, username, password)
     VALUES (0, ?, ?);""", (username,password,))
-    c.close()
+    conn.commit()
     conn.close()
     print("Successfully registered user with UID 0.")
 
