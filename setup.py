@@ -2,25 +2,32 @@ from os import system
 import json
 import sqlite3
 import hashlib
+import importlib
 from datetime import datetime
 
 try:
     with open('setup.lock', 'r') as f:
         setup_lock = json.load(f)
     if setup_lock['setup']:
-        print(f"Error while initalize setup progress:\nsetup.lock exist. FileDock may be installed at {setup_lock['time']}.\nIf you believe this is an error, please delete setup.lock and continue.")
+        setup_time = datetime.fromtimestamp(setup_lock['time']).strftime('%Y-%m-%d %H:%M:%S')
+        print(f"Error while initalize setup progress:\nsetup.lock exist. FileDock may be installed at {setup_time}.\nIf you believe this is an error, please remove setup.lock and continue.")
 except:
     # Install dependencies
-    dependencies = [
-        'flask',
-        #'git+https://github.com/riad-azz/flask-uploads'
-    ]
-    print(f"[Step 1] Install {len(dependencies)} dependencies.")
-    for depend in dependencies:
-        system(f"pip install {depend}")
+    dependencies = {
+        'flask': 'flask',
+        'flask_uploads': 'git+https://github.com/riad-azz/flask-uploads',
+    }
+    print(f"\t[Step 1] Install {len(dependencies)} dependencies.")
+    for key, value in dependencies.items():
+        try:
+            importlib.import_module(key)
+            print(f"{key} already installed.")
+        except:
+            print(f"Installing {key}...")
+            system(f"pip install {value}")
 
     # Edit config.json
-    print(f"[Step 2] Create config.json")
+    print(f"\t[Step 2] Create config.json")
     config = {
         "secret_key": "ReplaceWithYourSecretKey",
         "database": "database.db",
@@ -37,7 +44,7 @@ except:
         config = json.load(f)
 
     # Create database
-    print(f"[Step 3] Create database.")
+    print(f"\t[Step 3] Create database.")
     database = config['database']
     sqlite = [
         """create table users
@@ -89,7 +96,7 @@ VALUES ('operator', 1, 512);""",
     print(f"Successfully execute {len(sqlite)} queries.")
 
     # Create default operator
-    print(f"[Step 4] Create default operator account.")
+    print(f"\t[Step 4] Create default operator account.")
     print("This user will have all permissions.")
     username = input("Username > ")
     password = input("Password > ")
@@ -108,4 +115,4 @@ VALUES ('operator', 1, 512);""",
             'setup': True,
             'time': int(datetime.now().timestamp())
         }, f)
-    print("\n\nSuccessfully configured FileDock!\nTo run server, use 'flask run' and it'll be run on port 5000.\nFor more information please visit FileDock Wiki and Flask Wensite.")
+    print("\n\nSuccessfully configured FileDock!\nTo run server, use 'flask run' and it'll be run on port 5000.\nFor more information please visit FileDock Wiki and Flask Website.")
