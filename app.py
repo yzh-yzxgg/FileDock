@@ -53,6 +53,7 @@ def get_group(group):
 def get_unix_time():
     return int(datetime.now().timestamp())
 
+
 def get_user_ip(request):
     if request.headers.get('X-Forwarded-For'):
         return request.headers['X-Forwarded-For']
@@ -502,7 +503,7 @@ def files_create():
             }, 401
         uid = session[session_id]['uid']
     except KeyError:
-        uid = -1 # Anonymous
+        uid = -1  # Anonymous
     fileuuid = uuid.uuid4().hex
     filename = request.files['fileInput'].filename
     filestorage = files.save(request.files['fileInput'], name=fileuuid)
@@ -546,4 +547,6 @@ def login():
 def index():
     return render_template('index.html')
 
-app.run()
+
+if __name__ == '__main__':
+    app.run()
