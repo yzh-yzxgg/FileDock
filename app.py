@@ -9,6 +9,8 @@ from flask import Flask, request, send_file, render_template
 from flask_uploads import UploadSet, ALL, configure_uploads, \
     patch_request_class  # pip install git+https://github.com/riad-azz/flask-uploads
 
+import geetest
+
 with open('config.json', 'r') as f:
     config = json.load(f)
 
@@ -556,6 +558,20 @@ def files_download():
     if reqiure_captcha:
         try:
             captcha = request.json['captcha']
+            result = geetest.verify_test(
+                lot_number=captcha['lot_number'],
+                captcha_output=captcha['captcha_output'],
+                pass_token=captcha['pass_token'],
+                gen_time=captcha['gen_time']
+            )
+            if result['result'] != 'success':
+                return {
+                    'code': 403,
+                    'success': False,
+                    'data': {
+                        'message': captcha['reason']
+                    }
+                }, 403
         except KeyError:
             return {
                 'code': 400,
