@@ -533,6 +533,201 @@ def files_create():
     }, 201
 
 
+@app.route('/api/v1/files/get', methods=['POST'])
+def files_download():
+    try:
+        code = request.json['code']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }, 400
+    try:
+        session_id = request.headers['X-Session-ID']
+        if session_id in session:
+            reqiure_captcha = False
+        else:
+            reqiure_captcha = True
+    except KeyError:
+        reqiure_captcha = True
+    if reqiure_captcha:
+        try:
+            captcha = request.json['captcha']
+        except KeyError:
+            return {
+                'code': 400,
+                'success': False,
+                'data': {
+                    'message': 'Invalid request'
+                }
+            }, 400
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('SELECT * FROM uploads WHERE code=?', (code,))
+    file = c.fetchone()
+    conn.close()
+    if not file:
+        return {
+            'code': 404,
+            'success': False,
+            'data': {
+                'message': 'File not found'
+            }
+        }, 404
+    filename = file[1]
+    task_uuid = uuid.uuid4().hex
+    downloads_tasks[task_uuid] = {
+        'uuid': file[0],
+        'filename': filename,
+        'code': code,
+        'download_time': get_unix_time(),
+        'download_user': get_user_ip(request)
+    }
+    return {
+        'code': 200,
+        'success': True,
+        'data': {
+            'task_uuid': task_uuid,
+            'filemeta': {
+                'uuid': file[0],
+                'filename': file[1],
+                'code': file[2],
+                'upload_time': file[3],
+                'keep_time': file[4],
+                'upload_user': file[5],
+                'receive_user': file[6]
+            }
+        }
+    }, 200
+
+
+@app.route('/api/v1/files/download', methods=['GET'])
+def files_download_task():
+    try:
+        task_uuid = request.args['task_uuid']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }, 400
+    if task_uuid not in downloads_tasks:
+        return {
+            'code': 404,
+            'success': False,
+            'data': {
+                'message': 'Task not found'
+            }
+        }, 404
+    file = downloads_tasks[task_uuid]
+    del downloads_tasks[task_uuid]
+    return send_file('uploads/' + file['uuid'], as_attachment=True, download_name=file['filename'])
+
+
+@app.route('/api/v1/files/list', methods=['POST'])
+def files_list():
+    try:
+        session_id = request.headers['X-Session-ID']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }, 400
+    if session_id not in session:
+        return {
+            'code': 401,
+            'success': False,
+            'data': {
+                'message': 'Invalid session ID'
+            }
+        }, 401
+    uid = session[session_id]['uid']
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('SELECT * FROM uploads WHERE upload_user=?', (uid,))
+    files = c.fetchall()
+    conn.close()
+    ret = {
+        'code': 200,
+        'success': True,
+        'data': {
+            'files': []
+        }
+    }
+    for file in files:
+        ret['data']['files'].append({
+            'uuid': file[0],
+            'filename': file[1],
+            'code': file[2],
+            'upload_time': file[3],
+            'keep_time': file[4],
+            'upload_user': file[5],
+            'receive_user': file[6]
+        })
+    return ret, 200
+
+
+@app.route('/api/v1/files/delete', methods=['POST'])
+def files_delete():
+    try:
+        session_id = request.headers['X-Session-ID']
+        uuid = request.json['uuid']
+    except KeyError:
+        return {
+            'code': 400,
+            'success': False,
+            'data': {
+                'message': 'Invalid request'
+            }
+        }, 400
+    if session_id not in session:
+        return {
+            'code': 401,
+            'success': False,
+            'data': {
+                'message': 'Invalid session ID'
+            }
+        }, 401
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute('SELECT * FROM uploads WHERE uuid=?', (uuid,))
+    file = c.fetchone()
+    if not file:
+        return {
+            'code': 404,
+            'success': False,
+            'data': {
+                'message': 'File not found'
+            }
+        }, 404
+    if session[session_id]['uid'] != file[5]:
+        return {
+            'code': 403,
+            'success': False,
+            'data': {
+                'message': 'Not allowed'
+            }
+        }, 403
+    c.execute('DELETE FROM uploads WHERE uuid=?', (uuid,))
+    conn.commit()
+    conn.close()
+    return {
+        'code': 200,
+        'success': True,
+        'data': {
+            'message': 'File deleted'
+        }
+    }, 200
+
+
 @app.route('/favicon.ico')
 def favicon():
     return send_file('static/favicon/favicon.ico', mimetype='image/vnd.microsoft.icon')
