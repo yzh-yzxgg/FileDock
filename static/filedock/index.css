@@ -26,6 +26,7 @@ button.ui.massive:hover {
 }
 
 .code_display {
+    color: rgb(66, 145, 246);
     font-size: 40px; /* 设置字号为30 */
     text-align: center; /* 文字居中 */
     font-weight: bold;
@@ -33,3 +34,13 @@ button.ui.massive:hover {
     display: flex;
     justify-content: center; /* 水平居中 */
 }
+
+.ui.modal.square {
+    width: 500px; /* 设置宽度 */
+    height: 450px; /* 设置高度，与宽度相等使其成为正方形 */
+    margin: auto !important; /* 添加!important以确保覆盖Semantic UI的默认样式 */
+}
+
+/* .ui.mydimmer {
+    background-color: rgba(0, 0, 0, 0.5)/* 调整这里的透明度，数值越小越透明 */
+} */
