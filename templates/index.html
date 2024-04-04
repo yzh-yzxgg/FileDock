@@ -3,6 +3,7 @@
   <head>
     {% include 'head.html' %}
     <script>
+      user_type = 0;
       var user_exit = (session_id) => {
         $.ajax({
           url: "/api/v1/user/logout",
@@ -13,14 +14,83 @@
             "X-Session-ID": session_id,
           },
         }).done((response) => {});
-      }
-      var uploadFile = () => {
+      };
+      var getUserTypeAndContinue = (keep_time) => {
+        var session_id = $.cookie("session_id");
+        if (session_id) {
+          $.ajax({
+            url: "/api/v1/session/verify",
+            method: "GET",
+            timeout: 0,
+            headers: {
+              "Content-Type": "application/json",
+              "X-Session-ID": session_id,
+            },
+          }).done((response) => {
+            if (response.success) {
+              console.log(response);
+              $.ajax({
+                url: "/api/v1/user/info",
+                method: "POST",
+                timeout: 0,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                data: JSON.stringify({
+                  uid: $.cookie("uid"),
+                }),
+              }).done((response) => {
+                if (response.success) {
+                  if (response.data.group == "default") {
+                    user_type = 1;
+                    if (keep_time > 30) {
+                      $("#upload_warning")[0].innerText = "* 最多仅能保存 30 天";
+                      return;
+                    } else {
+                      $("#upload_modal_second").modal("hide");
+                      $("#upload_modal").modal("hide");
+                      uploadFile(keep_time);
+                    }
+                  } else if (response.data.group == "operator") {
+                    $("#upload_modal_second").modal("hide");
+                    $("#upload_modal").modal("hide");
+                    uploadFile(keep_time);
+                  }
+                }
+              });
+            } else {
+              if (user_type == 0 && keep_time > 1) {
+                $("#upload_warning")[0].innerText = "* 你尚未登录，最多仅能保存 1 天";
+                return;
+              }
+              else {
+                $("#upload_modal_second").modal("hide");
+                $("#upload_modal").modal("hide");
+                uploadFile(keep_time);
+              }
+            }
+          });
+        }
+        else {
+          if (user_type == 0 && keep_time > 1) {
+            $("#upload_warning")[0].innerText = "* 你尚未登录，最多仅能保存 1 天";
+            return;
+          }
+          else {
+            $("#upload_modal_second").modal("hide");
+            $("#upload_modal").modal("hide");
+            uploadFile(keep_time);
+          }
+        }
+      };
+
+      var uploadFile = (keep_time) => {
         fileInput = document.getElementById("fileInput");
         file = fileInput.files[0];
         file_name = file.name;
         formData = new FormData();
         formData.append("fileInput", file);
-        formData.append("keep_time", -1);
+        formData.append("keep_time", keep_time * 24 * 60 * 60);
         formData.append("receive_user", 0);
         fileInput.value = null;
         var headers = {};
@@ -36,17 +106,40 @@
           contentType: false,
         }).done((response) => {
           if (response.success) {
-            $("#upload_modal").modal("show");
             code = response.data.code;
             $("#file_name_dispaly")[0].innerText = file_name;
             $(".code_display")[0].innerText = code;
-          } else if(response.code == 401) {
+            $("#upload_modal_second")
+              .modal({
+                blurring: true,
+                observeChanges: true,
+              })
+              .modal("show");
+          } else if (response.code == 401) {
             $.removeCookie("uid");
           } else {
             alert(response.data.message);
           }
         });
-      }
+      };
+      var downloadFileList = () => {
+        $.ajax({
+          url: "/api/v1/files/list",
+          type: "POST",
+          headers: {
+            "X-Session-ID": "your_session_id",
+          },
+          success: function (data, status, xhr) {
+            console.log(data);
+          },
+          error: function (xhr, status, error) {
+            console.error("Error: " + status + " " + error);
+          },
+        }).done((response) => {
+          if (response.success) {
+          }
+        });
+      };
     </script>
   </head>
   <body>
@@ -75,18 +168,76 @@
           上传
         </button>
         <button class="massive ui button w-1/2 md:w-2/5 text-xl">接收</button>
-        <div id="upload_modal" class="ui modal square mydimmer">
+        <div id="upload_modal" class="ui modal mydimmer" style="width: 500px">
           <div class="header">
-            <button id="upload_modal_close_button" class="close icon button">
+            <div class="flex items-center">
+              <button
+                id="upload_modal_close_button_first"
+                class="close icon button"
+              >
+                <i class="close icon"></i>
+              </button>
+              <h3 class="ml-2">上传文件</h3>
+            </div>
+          </div>
+          <div class="content">
+            <div class="field">
+              <div class="ui form">
+                <div class="field">
+                  <label>保存天数</label>
+                  <input
+                    id="keep_time_form"
+                    type="text"
+                    placeholder="1"
+                    value="1"
+                  />
+                </div>
+              </div>
+              <div class="flex mt-2">
+                <p id="upload_warning" class="mb-6" style="color: red;"></p>
+              </div>
+              <div class="flex justify-center mt-2">
+                <button
+                  id="upload_modal_button"
+                  class="ui button blue w-1/2 md:w-1/5 text-xl"
+                >
+                  上传
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="upload_modal_second" class="ui modal square mydimmer">
+          <div class="header">
+            <button
+              id="upload_modal_close_button_second"
+              class="close icon button"
+            >
               <i class="close icon"></i>
             </button>
           </div>
           <div class="content">
             <div class="flex flex-col items-center">
-              <p class="text-xl font-bold mb-20">您的文件 <span id="file_name_dispaly"></span> 已成功上传</p>
+              <p class="text-xl font-bold mb-20">
+                您的文件 <span id="file_name_dispaly"></span> 已成功上传
+              </p>
               <p class="mb-6">您的取件码：</p>
-              <div class="code_display mb-24 font-bold">123456</div>
+              <div class="code_display font-bold mb-11">123456</div>
+              <!-- <div class="flex justify-center">
+                <a href="#" class="massive ui blue w-1/2 md:w-2/5 text-xl " onclick="copyCode()" style="animation: glowing 2s infinite;">
+                  复制
+                </a>
+              </div> -->
               <p class="m-10">接收文件时请输入此取件码。</p>
+              <p class="mb-1">
+                由
+                <a
+                  href="/"
+                  style="color: rgb(66, 145, 246)"
+                  >FileDock</a
+                >
+                提供服务
+              </p>
             </div>
           </div>
         </div>
@@ -107,22 +258,42 @@
       });
     </script>
     <script>
-      $('#upload_modal')
+      $("#upload_modal")
         .modal({
-          // 在这里配置 Modal 的参数
-          blurring: true, // 设置为true可以让背景模糊，而不是变暗
-          observeChanges: true, // 监听内容变化，确保Modal大小适配
+          blurring: true,
+          observeChanges: true,
         })
-        .modal('show'); // 显示Modal
+        .modal("show");
       $("#upload_button")[0].addEventListener("click", () => {
         $("#fileInput").click();
       });
       $("#fileInput").on("input", () => {
-        uploadFile();
+        $("#upload_modal")
+          .modal({
+            blurring: true,
+            observeChanges: true,
+          })
+          .modal("show");
       });
-      $("#upload_modal_close_button")[0].addEventListener("click", () => {
+      $("#upload_modal_button")[0].addEventListener("click", () => {
+        keep_time = $("#keep_time_form")[0].value;
+        if (Number.isInteger(parseInt(keep_time)) && parseInt(keep_time) > 0) {
+          getUserTypeAndContinue(keep_time);
+        } else {
+          $("#upload_warning")[0].innerText = "* 非法输入";          
+        }
+      });
+      $("#upload_modal_close_button_first")[0].addEventListener("click", () => {
         $("#upload_modal").modal("hide");
+        $("#upload_modal_second").modal("hide");
       });
+      $("#upload_modal_close_button_second")[0].addEventListener(
+        "click",
+        () => {
+          $("#upload_modal").modal("hide");
+          $("#upload_modal_second").modal("hide");
+        }
+      );
     </script>
     <script>
       $(".ui.dropdown").dropdown();
@@ -146,7 +317,7 @@
             $("#display_username")[0].innerText = response.data.username;
           }
         });
-      }
+      };
 
       session_id = $.cookie("session_id");
       if (session_id) {
@@ -165,6 +336,11 @@
           }
         });
       }
+      var copyCode = () => {
+        var codeDisplay = document.querySelector(".code_display");
+        var code = codeDisplay.innerText;
+        navigator.clipboard.writeText(code);
+      };
     </script>
   </body>
 </html>

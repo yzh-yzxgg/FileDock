@@ -40,7 +40,3 @@ button.ui.massive:hover {
     height: 450px; /* 设置高度，与宽度相等使其成为正方形 */
     margin: auto !important; /* 添加!important以确保覆盖Semantic UI的默认样式 */
 }
-
-/* .ui.mydimmer {
-    background-color: rgba(0, 0, 0, 0.5)/* 调整这里的透明度，数值越小越透明 */
-} */
