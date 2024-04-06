@@ -1,28 +1,27 @@
+import hmac
 import json
 import logging
-import hmac
+
 import requests
 
-with open('config.json', 'r') as f:
-    config = json.load(f)['geetest']
-enabled = config['enable']
-captcha_id = config['captcha_id']
-captcha_key = config['captcha_key']
-api_server = config['api_server']
+with open("config.json", "r") as f:
+    config = json.load(f)["geetest"]
+enabled = config["enable"]
+captcha_id = config["captcha_id"]
+captcha_key = config["captcha_key"]
+api_server = config["api_server"]
 
-def verify_test(lot_number='', captcha_output='', pass_token='', gen_time=''):
+
+def verify_test(lot_number="", captcha_output="", pass_token="", gen_time=""):
     if not enabled:
-        return {
-            "result": "success",
-            "reason": "Geetest is disabled."
-        }
+        return {"result": "success", "reason": "Geetest is disabled."}
     # 生成签名
     # 生成签名使用标准的hmac算法，使用用户当前完成验证的流水号lot_number作为原始消息message，使用客户验证私钥作为key
     # 采用sha256散列算法将message和key进行单向散列生成最终的签名
     lotnumber_bytes = lot_number.encode()
     prikey_bytes = captcha_key.encode()
-    sign_token = hmac.new(prikey_bytes, lotnumber_bytes, digestmod='SHA256').hexdigest()
-    
+    sign_token = hmac.new(prikey_bytes, lotnumber_bytes, digestmod="SHA256").hexdigest()
+
     # 上传校验参数到极验二次验证接口, 校验用户验证状态
     query = {
         "lot_number": lot_number,
@@ -38,21 +37,14 @@ def verify_test(lot_number='', captcha_output='', pass_token='', gen_time=''):
         res = requests.post(url, query)
         assert res.status_code == 200
         msg = res.json()
-        if msg['result'] == 'success':
+        if msg["result"] == "success":
             logging.info("Geetest captcha passed successfully.")
-            return {
-                "result": "success",
-                "reason": msg['reason']
-            }
+            return {"result": "success", "reason": msg["reason"]}
         else:
-            return {
-                "result": "fail",
-                "reason": msg['reason']
-            }
+            return {"result": "fail", "reason": msg["reason"]}
     except Exception as e:
         return {
             "result": "error",
             "reason": "Failed to verify captcha. Please try again later.",
-            "exception": e
+            "exception": e,
         }
-        
