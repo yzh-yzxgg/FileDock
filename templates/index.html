@@ -3,7 +3,14 @@
   <head>
     {% include 'head.html' %}
     <script>
-      user_type = 0;
+      var user_type = 0;
+      function timestampToYMD(timestamp) {
+        var date = new Date(timestamp * 1000);
+        var year = date.getFullYear();
+        var month = ("0" + (date.getMonth() + 1)).slice(-2);
+        var day = ("0" + date.getDate()).slice(-2);
+        return year + "-" + month + "-" + day;
+      }
       var user_exit = (session_id) => {
         $.ajax({
           url: "/api/v1/user/logout",
@@ -15,6 +22,7 @@
           },
         }).done((response) => {});
       };
+
       var getUserTypeAndContinue = (keep_time) => {
         var session_id = $.cookie("session_id");
         if (session_id) {
@@ -122,6 +130,44 @@
           }
         });
       };
+      var downloadByCode = (code) => {
+        $.ajax({
+          url: "/api/v1/files/get",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Session-ID": $.cookie("session_id"),
+          },
+          data: JSON.stringify({
+            code: code,
+          }),
+        }).done((response) => {
+          if (response.success) {
+            $("#download_modal_by_code").modal("hide");
+            $("#download_list_modal").modal("hide");
+            $("#download_list_modal tbody").append(`
+              <tr>
+                <td data-label="文件名">${response.data.filemeta.filename}</td>
+                <td data-label="上传时间">${timestampToYMD(response.data.filemeta.upload_time)}</td>
+                <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.filemeta.code}</td>
+                <td data-label="操作">
+                  <button class="downloadbutton" onclick="downloadFileByClick('${response.data.task_uuid.toString()}')"><i class="download icon"></i></button>
+                </td>
+              </tr>
+            `);
+            $("#download_list_modal")
+              .modal({
+                blurring: true,
+                observeChanges: true,
+              })
+              .modal("show");
+          }
+        });
+      };
+      var downloadFileByClick = (task_uuid) => {
+        console.log("click");
+        window.location.href = "/api/v1/files/download?task_uuid=" + task_uuid;
+      }
       var downloadFileList = () => {
         $.ajax({
           url: "/api/v1/files/list",
@@ -167,7 +213,7 @@
         >
           上传
         </button>
-        <button class="massive ui button w-1/2 md:w-2/5 text-xl">接收</button>
+        <button id="download_button" class="massive ui button w-1/2 md:w-2/5 text-xl">接收</button>
         <div id="upload_modal" class="ui modal mydimmer" style="width: 500px">
           <div class="header">
             <div class="flex items-center">
@@ -241,7 +287,64 @@
             </div>
           </div>
         </div>
+        <div id="download_modal_by_code" class="ui modal mydimmer sorrow">
+          <div class="header">
+            <div class="flex items-center">
+              <button
+                id="download_modal_by_code_close_button"
+                class="close icon button"
+              >
+                <i class="close icon"></i>
+              </button>
+              <h3 class="ml-2">取件码接收</h3>
+            </div>
+          </div>
+          <div class="content">
+            <div class="flex flex-col items-center">
+              <p class="text-xl font-bold mb-16">
+              </p>
+              <div class="ui form mb-6 w-full">
+                <div class="huge field">
+                  <label>取件码</label>
+                  <input type="text" placeholder="请输入取件码" class="flex content-between" />
+                </div>
+              </div>
+              <div class="flex justify-center mt-16">
+                <button id="download_by_code_button" class="ui button blue text-xl">
+                  接收  
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      <div id="download_list_modal" class="ui modal mydimmer square">
+        <div class="header">
+          <div class="flex items-center">
+            <button
+              id="download_list_modal_close_button"
+              class="close icon button"
+            >
+              <i class="close icon"></i>
+            </button>
+            <h3 id="download_list_modal_head" class="ml-2">文件列表</h3>
+          </div>
+        </div>
+        <div class="content">
+          <table id="download_list" class="ui celled striped table">
+            <thead>
+              <tr>
+                <th>文件名</th>
+                <th>上传时间</th>
+                <th>取件码</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
       <div class="flex flex-col items-end w-full">
         {% include 'footer.html' %}
       </div>
@@ -258,7 +361,7 @@
       });
     </script>
     <script>
-      $("#upload_modal")
+      $("#download_list_modal")
         .modal({
           blurring: true,
           observeChanges: true,
@@ -294,6 +397,26 @@
           $("#upload_modal_second").modal("hide");
         }
       );
+      $("#download_button")[0].addEventListener("click", () => {
+        $("#download_modal_by_code")
+          .modal({
+            blurring: true,
+            observeChanges: true,
+          })
+          .modal("show");
+      });
+      $("#download_modal_by_code_close_button")[0].addEventListener("click", () => {
+        $("#download_modal_by_code").modal("hide");
+        $("#download_list_modal").modal("hide");
+      });
+      $("#download_list_modal_close_button")[0].addEventListener("click", () => {
+        $("#download_modal_by_code").modal("hide");
+        $("#download_list_modal").modal("hide");
+      });
+      $("#download_by_code_button")[0].addEventListener("click", () => {
+        code = $("#download_modal_by_code input")[0].value;
+        downloadByCode(code);
+      });
     </script>
     <script>
       $(".ui.dropdown").dropdown();
@@ -318,7 +441,6 @@
           }
         });
       };
-
       session_id = $.cookie("session_id");
       if (session_id) {
         $.ajax({
@@ -332,6 +454,8 @@
         }).done((response) => {
           if (response.success) {
             $("#login_button")[0].classList.add("hidden");
+            if(response.data.group == "default" ) user_type = 1;
+            else if(response.data.group == "operator") user_type = -1;
             display_username();
           }
         });
