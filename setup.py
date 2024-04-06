@@ -5,7 +5,7 @@ import hashlib
 import importlib
 from datetime import datetime
 
-config_version = 2
+config_version = 3
 config = {
     "secret_key": "ReplaceWithYourSecretKey",
     "database": "database.db",
@@ -17,6 +17,7 @@ config = {
         "enable": False,
         "captcha_id": "ReplaceWithYourCaptchaID",
         "captcha_key": "ReplaceWithYourCaptchaKey",
+        "api_server": "http://gcaptcha4.geetest.com"
     }
 }
 database_version = 1
