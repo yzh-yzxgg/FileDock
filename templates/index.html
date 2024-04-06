@@ -131,16 +131,27 @@
         });
       };
       var downloadByCode = (code) => {
+        headers = {
+          "Content-Type": "application/json",
+        };
+        data = {
+          code: code,
+        };
+        if (user_type == 0 || user_type == 1) {
+          data["captcha"] = {
+            "lot_number": "",
+            "captcha_output": "",
+            "pass_token": "",
+            "gen_time": "",
+          }
+        } else if (user_type == -1){
+          headers["X-Session-ID"] = $.cookie("session_id");
+        }
         $.ajax({
           url: "/api/v1/files/get",
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Session-ID": $.cookie("session_id"),
-          },
-          data: JSON.stringify({
-            code: code,
-          }),
+          headers: headers,
+          data: JSON.stringify(data),
         }).done((response) => {
           if (response.success) {
             $("#download_modal_by_code").modal("hide");
@@ -168,12 +179,31 @@
         console.log("click");
         window.location.href = "/api/v1/files/download?task_uuid=" + task_uuid;
       }
+      var downloadFileInList = (code) => {
+        headers = {
+          "Content-Type": "application/json",
+        };
+        data = {
+          code: code,
+        };
+        headers["X-Session-ID"] = $.cookie("session_id");
+        $.ajax({
+          url: "/api/v1/files/get",
+          method: "POST",
+          headers: headers,
+          data: JSON.stringify(data),
+        }).done((response) => {
+          if (response.success) {
+            window.location.href = "/api/v1/files/download?task_uuid=" + response.data.task_uuid.toString();
+          }
+        });
+      };
       var downloadFileList = () => {
         $.ajax({
           url: "/api/v1/files/list",
           type: "POST",
           headers: {
-            "X-Session-ID": "your_session_id",
+            "X-Session-ID": $.cookie("session_id"),
           },
           success: function (data, status, xhr) {
             console.log(data);
@@ -183,6 +213,25 @@
           },
         }).done((response) => {
           if (response.success) {
+            console.log(response);
+            for(var i = 0; i < response.data.files.length; i++) {
+              $("#download_list_modal tbody").append(`
+                <tr>
+                  <td data-label="文件名">${response.data.files[i].filename}</td>
+                  <td data-label="上传时间">${timestampToYMD(response.data.files[i].upload_time)}</td>
+                  <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.files[i].code}</td>
+                  <td data-label="操作">
+                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i class="download icon"></i></button>
+                  </td>
+                </tr>
+              `);
+            }
+            $("#download_list_modal")
+              .modal({
+                blurring: true,
+                observeChanges: true,
+              })
+              .modal("show");
           }
         });
       };
@@ -196,6 +245,7 @@
           <div class="menu">
             <div id="display_username" class="header hidden"></div>
             <div id="login_button" class="item">登录</div>
+            <div id="file_list_button" class="item hidden">我的文件</div>
             <div id="exit_button" class="item">退出</div>
           </div>
         </div>
@@ -417,6 +467,9 @@
         code = $("#download_modal_by_code input")[0].value;
         downloadByCode(code);
       });
+      $("#file_list_button")[0].addEventListener("click", () => {
+        downloadFileList();
+      });
     </script>
     <script>
       $(".ui.dropdown").dropdown();
@@ -425,6 +478,8 @@
         disname_obj = $("#display_username")[0];
         disname_obj.classList.remove("hidden");
         disname_obj.classList.add("font-bold");
+        dislist_obj = $("#file_list_button")[0];
+        dislist_obj.classList.remove("hidden");
         $.ajax({
           url: "/api/v1/user/info",
           method: "POST",
