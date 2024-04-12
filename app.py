@@ -1,11 +1,13 @@
 import hashlib
 import json
+import os
 import random
 import sqlite3
 import uuid
 from datetime import datetime
 
 from flask import Flask, request, send_file, render_template
+from flask_apscheduler import APScheduler
 from flask_uploads import (
     UploadSet,
     ALL,
@@ -14,6 +16,7 @@ from flask_uploads import (
 )  # pip install git+https://github.com/riad-azz/flask-uploads
 
 import geetest
+import scheduler
 
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -23,9 +26,9 @@ app.secret_key = config["secret_key"]
 database = config["database"]
 
 app.config["UPLOADED_FILEINPUT_DEST"] = config["uploads"]["upload_folder"]
+app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * config["uploads"]["max_content_length"]
 files = UploadSet("fileInput", ALL)
 configure_uploads(app, files)
-app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * config["uploads"]["max_content_length"]
 patch_request_class(app, 32 * 1024 * config["uploads"]["max_content_length"])
 
 session = {}
@@ -409,7 +412,7 @@ def files_create():
     while c.fetchone():
         code = random.randint(100000, 999999)
     c.execute(
-        "INSERT INTO uploads (uuid, filename, code, upload_time, keep_time, upload_user, receive_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO uploads (uuid, filename, code, upload_time, keep_time, upload_user, shareport) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (fileuuid, filename, code, get_unix_time(), keep_time, uid, receive_user),
     )
     conn.commit()
@@ -602,6 +605,9 @@ def files_delete():
         }, 404
     if session[session_id]["uid"] != file[5]:
         return {"code": 403, "success": False, "data": {"message": "Not allowed"}}, 403
+    filepath = os.path.join(config["uploads"]["upload_folder"], file[0])
+    if os.path.exists(filepath):
+        os.remove(filepath)
     c.execute("DELETE FROM uploads WHERE uuid=?", (uuid,))
     conn.commit()
     conn.close()
@@ -622,6 +628,14 @@ def login():
 def index():
     return render_template("index.html")
 
+
+app.config.from_object(scheduler.Config())
+
+crontab = APScheduler()
+crontab.init_app(app)
+crontab.start()
+
+scheduler.uploads_timeout()
 
 if __name__ == "__main__":
     app.run()
