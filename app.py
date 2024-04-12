@@ -523,7 +523,13 @@ def files_download_task():
             "data": {"message": "Task not found"},
         }, 404
     file = downloads_tasks[task_uuid]
-    del downloads_tasks[task_uuid]
+    if get_unix_time() - file["download_time"] > config["downloads"]["session_timeout"]:
+        del downloads_tasks[task_uuid]
+        return {
+            "code": 408,
+            "success": False,
+            "data": {"message": "Download session has timed out, please try again."},
+        }, 408
     return send_file(
         "uploads/" + file["uuid"], as_attachment=True, download_name=file["filename"]
     )

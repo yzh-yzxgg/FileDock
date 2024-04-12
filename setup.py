@@ -5,11 +5,14 @@ import sqlite3
 from datetime import datetime
 from os import system
 
-config_version = 3
+config_version = 4
 config = {
     "secret_key": "ReplaceWithYourSecretKey",
     "database": "database.db",
     "uploads": {"upload_folder": "./uploads", "max_content_length": 2048},
+    "downloads": {
+        "session_timeout": 3600,
+    },
     "geetest": {
         "enable": False,
         "captcha_id": "ReplaceWithYourCaptchaID",
