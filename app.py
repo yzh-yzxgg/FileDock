@@ -409,7 +409,7 @@ def files_create():
     while c.fetchone():
         code = random.randint(100000, 999999)
     c.execute(
-        "INSERT INTO uploads (uuid, filename, code, upload_time, keep_time, upload_user, receive_user) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO uploads (uuid, filename, code, upload_time, keep_time, upload_user, shareport) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (fileuuid, filename, code, get_unix_time(), keep_time, uid, receive_user),
     )
     conn.commit()
