@@ -156,6 +156,7 @@
                 if (response.success) {
                     $("#download_modal_by_code").modal("hide");
                     $("#download_list_modal").modal("hide");
+                    $("#download_list_modal tbody").empty();
                     $("#download_list_modal tbody").append(`
               <tr>
                 <td data-label="文件名">${response.data.filemeta.filename}</td>
@@ -214,6 +215,7 @@
             }).done((response) => {
                 if (response.success) {
                     console.log(response);
+                    $("#download_list_modal tbody").empty();
                     for (var i = 0; i < response.data.files.length; i++) {
                         $("#download_list_modal tbody").append(`
                 <tr>
@@ -264,7 +266,7 @@
             上传
         </button>
         <button class="massive ui button w-1/2 md:w-2/5 text-xl" id="download_button">接收</button>
-        <div class="ui modal mydimmer" id="upload_modal" style="width: 500px">
+        <div class="ui modal mydimmer" id="upload_modal" style="padding: 20px">
             <div class="header">
                 <div class="flex items-center">
                     <button
@@ -303,7 +305,7 @@
                 </div>
             </div>
         </div>
-        <div class="ui modal square mydimmer" id="upload_modal_second">
+        <div class="ui modal mydimmer square" id="upload_modal_second">
             <div class="header">
                 <button
                         class="close icon button"
@@ -337,7 +339,7 @@
                 </div>
             </div>
         </div>
-        <div class="ui modal mydimmer sorrow" id="download_modal_by_code">
+        <div class="ui modal mydimmer" id="download_modal_by_code" style="padding: 20px;">
             <div class="header">
                 <div class="flex items-center">
                     <button
@@ -368,7 +370,7 @@
             </div>
         </div>
     </div>
-    <div class="ui modal mydimmer square" id="download_list_modal">
+    <div class="ui modal mydimmer " id="download_list_modal" style="padding: 20px">
         <div class="header">
             <div class="flex items-center">
                 <button
@@ -506,6 +508,11 @@
                 if (response.data.group == "default") user_type = 1;
                 else if (response.data.group == "operator") user_type = -1;
                 display_username();
+            }
+            else if (response.code == 401){
+                console.log("session verify failed");
+                $.removeCookie("uid");
+                $.removeCookie("session_id");
             }
         });
     }
