@@ -492,7 +492,10 @@
             }
         });
     };
+    uid = $.cookie("uid");
     session_id = $.cookie("session_id");
+    $.removeCookie("uid");
+    $.removeCookie("session_id");
     if (session_id) {
         $.ajax({
             url: "/api/v1/session/verify",
@@ -504,15 +507,12 @@
             },
         }).done((response) => {
             if (response.success) {
+                $.cookie("uid", uid);
+                $.cookie("session_id", session_id);
                 $("#login_button")[0].classList.add("hidden");
                 if (response.data.group == "default") user_type = 1;
                 else if (response.data.group == "operator") user_type = -1;
                 display_username();
-            }
-            else if (response.code == 401){
-                console.log("session verify failed");
-                $.removeCookie("uid");
-                $.removeCookie("session_id");
             }
         });
     }

@@ -629,6 +629,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/manage")
+def manage():
+    return render_template("manage.html")
+
+
 app.config.from_object(scheduler.Config())
 
 crontab = APScheduler()
