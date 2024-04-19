@@ -35,7 +35,7 @@
     };
 </script>
 <body>
-    <a class="ui primary button labeled icon " role="button" onclick="createUser()"><i aria-hidden="true" class="plus icon"></i>新建用户</a>
+    <a class="ui primary button labeled icon " role="button" onclick="createUserModal()"><i aria-hidden="true" class="plus icon"></i>新建用户</a>
     <table class="ui celled striped table" id="user_list">
         <thead>
         <tr>
@@ -47,6 +47,53 @@
         </thead>
         <tbody></tbody>
     </table>
+    <div id="create_user_modal" class="ui tiny modal">
+        <div class="header">
+            <div class="flex items-center">
+                <button
+                        class="close icon button"
+                        id="create_user_modal_close_button"
+                >
+                    <i class="close icon"></i>
+                </button>
+                <h3 class="ml-2">创建用户</h3>
+            </div>
+        </div>
+        <div class="content">
+            <div class="flex flex-col items-center">
+                <p class="text-xl font-bold mb-4">
+                </p>
+                <div class="ui form mb-6 w-full">
+                    <div class="huge field">
+                        <label>用户名</label>
+                        <input id="new_username" class="flex content-between" type="text"/>
+                    </div>
+                    <div class="huge field">
+                        <label>密码</label>
+                        <input id="new_password" class="flex content-between"  type="password"/>
+                    </div>
+                    <div class="huge field">
+                        <label>重复密码</label>
+                        <input id="repeate_password" class="flex content-between" type="password"/>
+                    </div>
+                    <div class="ui form">
+                        <div class="field">
+                          <label>group</label>
+                          <select id="group_select">
+                            <option value="1">default</option>
+                            <option value="0">operator</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-4">
+                    <button class="ui button blue text-xl" id="create_user_button" onclick="createUser()">
+                        创建
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 <script>
     $.ajax({
@@ -68,8 +115,29 @@
             console.log("Request failed with code: " + response.code);
         }
     });
+    $("#create_user_modal_close_button").on("click", function() {
+        $("#create_user_modal").modal("hide");
+    });
+    var createUserModal = function () {
+        $("#create_user_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
     var createUser = function () {
-        
+        var username = $("#new_username").val();
+        var password = $("#new_password").val();
+        var repeatPassword = $("#repeate_password").val();
+        var group = $("#group_select").val();
+        if(group == 0) group = "operator";
+        else if(group == 1) group = "default";
+        console.log(group)
+        if (password !== repeatPassword) {
+            alert("两次输入的密码不一致");
+            return;
+        }
         $.ajax({
             url: "/api/v1/user/create",
             method: "POST",
@@ -79,9 +147,11 @@
                 "Content-Type": "application/json",
             },
             data: JSON.stringify({
-                username: username,
-                password: password,
-                group: group,
+                "userdata": {
+                    "username": username,
+                    "password": password,
+                    "group": group
+                }
             }),
         }).done((response) => {
             if (response.success) {
