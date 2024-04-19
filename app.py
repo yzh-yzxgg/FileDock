@@ -624,14 +624,18 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-
 @app.route("/manage")
 def manage():
     return render_template("manage.html")
+
+@app.route("/shareport")
+def shareport():
+    return render_template("shareport.html")
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 
 app.config.from_object(scheduler.Config())
