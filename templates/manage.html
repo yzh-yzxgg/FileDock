@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh_cn">
+<html>
+<head>
+    <title>管理面板</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="/static/jquery/jquery.min.js"></script>
+    <script src="/static/jquery/jquery.cookie.min.js"></script>
+    <script src="/static/semantic-ui/semantic.min.js"></script>
+    <script src="/static/tailwindcss/tailwindcss.min.js"></script>
+    <link rel="stylesheet" href="/static/semantic-ui/semantic.min.css">
+    <link rel="stylesheet" href="/static/filedock/index.css">
+</head>
+<script>
+    var deleteUser = function (uid) {
+        $.ajax({
+            url: "/api/v1/user/delete",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uid: uid,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                console.log("Request failed with code: " + response.code);
+            }
+        });
+    };
+</script>
+<body>
+    <a class="ui primary button labeled icon " role="button" onclick="createUser()"><i aria-hidden="true" class="plus icon"></i>新建用户</a>
+    <table class="ui celled striped table" id="user_list">
+        <thead>
+        <tr>
+            <th>uid</th>
+            <th>username</th>
+            <th>group</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</body>
+<script>
+    $.ajax({
+        url: "/api/v1/user/list",
+        method: "GET",
+        timeout: 0,
+        headers: {
+            "X-Session-ID": $.cookie("session_id"),
+        },
+    }).done((response) => {
+        if (response.success) {
+            var users = response.data.users;
+            for (var i = 0; i < users.length; i++) {
+                var user = users[i];
+                var row = "<tr><td>" + user.uid + "</td><td>" + user.username + "</td><td>" + user.group + "</td><td><button class=\"delete user\" onclick=\"deleteUser("+response.data.users[i].uid+")\"><i class=\"close  red icon\"></i><button></td></tr>";
+                $("#user_list tbody").append(row);
+            }
+        } else {
+            console.log("Request failed with code: " + response.code);
+        }
+    });
+    var createUser = function () {
+        
+        $.ajax({
+            url: "/api/v1/user/create",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                username: username,
+                password: password,
+                group: group,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                console.log("Request failed with code: " + response.code);
+            }
+        });
+    };
+</script>
+</html>
