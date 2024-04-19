@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh_cn">
+<html>
+<head>
+    <title>管理面板</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="/static/jquery/jquery.min.js"></script>
+    <script src="/static/jquery/jquery.cookie.min.js"></script>
+    <script src="/static/semantic-ui/semantic.min.js"></script>
+    <script src="/static/tailwindcss/tailwindcss.min.js"></script>
+    <link rel="stylesheet" href="/static/semantic-ui/semantic.min.css">
+    <link rel="stylesheet" href="/static/filedock/index.css">
+</head>
+<script>
+    var deleteUser = function (uid) {
+        $.ajax({
+            url: "/api/v1/user/delete",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uid: uid,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                console.log("Request failed with code: " + response.code);
+            }
+        });
+    };
+</script>
+<body>
+    <a class="ui primary button labeled icon " role="button" onclick="createUserModal()"><i aria-hidden="true" class="plus icon"></i>新建用户</a>
+    <table class="ui celled striped table" id="user_list">
+        <thead>
+        <tr>
+            <th>uid</th>
+            <th>username</th>
+            <th>group</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <div id="create_user_modal" class="ui tiny modal">
+        <div class="header">
+            <div class="flex items-center">
+                <button
+                        class="close icon button"
+                        id="create_user_modal_close_button"
+                >
+                    <i class="close icon"></i>
+                </button>
+                <h3 class="ml-2">创建用户</h3>
+            </div>
+        </div>
+        <div class="content">
+            <div class="flex flex-col items-center">
+                <p class="text-xl font-bold mb-4">
+                </p>
+                <div class="ui form mb-6 w-full">
+                    <div class="huge field">
+                        <label>用户名</label>
+                        <input id="new_username" class="flex content-between" type="text"/>
+                    </div>
+                    <div class="huge field">
+                        <label>密码</label>
+                        <input id="new_password" class="flex content-between"  type="password"/>
+                    </div>
+                    <div class="huge field">
+                        <label>重复密码</label>
+                        <input id="repeate_password" class="flex content-between" type="password"/>
+                    </div>
+                    <div class="ui form">
+                        <div class="field">
+                          <label>group</label>
+                          <select id="group_select">
+                            <option value="1">default</option>
+                            <option value="0">operator</option>
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-4">
+                    <button class="ui button blue text-xl" id="create_user_button" onclick="createUser()">
+                        创建
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    $.ajax({
+        url: "/api/v1/user/list",
+        method: "GET",
+        timeout: 0,
+        headers: {
+            "X-Session-ID": $.cookie("session_id"),
+        },
+    }).done((response) => {
+        if (response.success) {
+            var users = response.data.users;
+            for (var i = 0; i < users.length; i++) {
+                var user = users[i];
+                var row = "<tr><td>" + user.uid + "</td><td>" + user.username + "</td><td>" + user.group + "</td><td><button class=\"delete user\" onclick=\"deleteUser("+response.data.users[i].uid+")\"><i class=\"close  red icon\"></i><button></td></tr>";
+                $("#user_list tbody").append(row);
+            }
+        } else {
+            console.log("Request failed with code: " + response.code);
+        }
+    });
+    $("#create_user_modal_close_button").on("click", function() {
+        $("#create_user_modal").modal("hide");
+    });
+    var createUserModal = function () {
+        $("#create_user_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
+    var createUser = function () {
+        var username = $("#new_username").val();
+        var password = $("#new_password").val();
+        var repeatPassword = $("#repeate_password").val();
+        var group = $("#group_select").val();
+        if(group == 0) group = "operator";
+        else if(group == 1) group = "default";
+        console.log(group)
+        if (password !== repeatPassword) {
+            alert("两次输入的密码不一致");
+            return;
+        }
+        $.ajax({
+            url: "/api/v1/user/create",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                "userdata": {
+                    "username": username,
+                    "password": password,
+                    "group": group
+                }
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                console.log("Request failed with code: " + response.code);
+            }
+        });
+    };
+</script>
+</html>

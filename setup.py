@@ -76,7 +76,7 @@ def create_database():
         upload_time  integer            not null,
         keep_time    integer default -1 not null,
         upload_user  integer            not null,
-        shreport     TEXT default null
+        shareport    TEXT default null
         );""",
         """create table groups
         (
