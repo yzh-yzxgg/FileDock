@@ -532,7 +532,7 @@ def files_download_task():
             "code": 408,
             "success": False,
             "data": {"message": "Download session has timed out, please try again."},
-        }
+        } 
     return send_file(
         "uploads/" + file["uuid"], as_attachment=True, download_name=file["filename"]
     )
@@ -628,10 +628,16 @@ def login():
 def manage():
     return render_template("manage.html")
 
+
 @app.route("/shareport")
 def shareport():
-    return render_template("shareport.html")
+    return render_template("shareportindex.html")
 
+
+@app.route("/shareport/<shareportname>")
+def shareport_page(shareportname):
+    #等待数据库支持
+    return render_template("shareport.html", shareportname=shareportname)
 
 @app.route("/")
 def index():

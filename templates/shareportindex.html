@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh_cn">
+<head>
+    {% include 'head.html' %}
+    <title>SharePort</title>
+</head>
+<body>
+    <div class="mb-1 z-40 w-full">
+        <div class="max-w-8xl mx-auto text-lg">
+          <div class="py-4 border-b border-slate-900/10 lg:px-1 lg:border-0 dark:border-slate-300/10 mx-4 lg:mx-0">
+            <div class="flex justify-between items-center">
+                <div class="ui dropdown">
+                    <input type="hidden" name="filters">
+                    <span class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SharePort</span>
+                    <div class="menu">
+                        <div class="item" id="FileDock">
+                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400">FileDock</span>
+                        </div>
+                        <div class="item" id="SharePort">
+                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400">SharePort</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui icon top pointing dropdown button">
+                    <i class="user icon"></i>
+                    <div class="menu">
+                        <div class="header hidden" id="display_username"></div>
+                        <div class="item" id="login_button">登录</div>
+                        <div class="item hidden" id="file_list_button">我的文件</div>
+                        <div class="item" id="exit_button">退出</div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -271,7 +271,7 @@
             <div class="flex justify-between items-center">
                 <div class="ui dropdown">
                     <input type="hidden" name="filters">
-                    <span class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SharePort</span>
+                    <span id="shareportname" class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SharePort</span>
                     <div class="menu">
                         <div class="item" id="FileDock">
                             <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400">FileDock</span>
@@ -447,6 +447,7 @@
 </div>
 </div>
 <script>
+    $('#shareportname').html('SharePort - {{shareportname}}');
     $("#login_button")[0].addEventListener("click", () => {
         window.location.href = "/login";
     });
