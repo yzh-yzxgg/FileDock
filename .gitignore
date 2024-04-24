@@ -4,6 +4,9 @@ database.db
 config.json
 setup.lock
 
+# Project-specific files
+doc/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
