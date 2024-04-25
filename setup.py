@@ -20,7 +20,7 @@ config = {
         "api_server": "http://gcaptcha4.geetest.com",
     },
 }
-database_version = 2
+database_version = 3
 database = ""
 
 
@@ -92,6 +92,17 @@ def create_database():
         VALUES ('default', 0, 512);""",
         """INSERT INTO groups (name, operator, max_size)
         VALUES ('operator', 1, 512);""",
+        """create table shareport
+        (
+            uuid     text not null
+                constraint shareport_pk
+                    primary key
+                constraint shareport_uniqpk
+                    unique,
+            name     text,
+            password text,
+            list     text default '[]'
+        );""",
     ]
     conn = sqlite3.connect(database)
     c = conn.cursor()
@@ -161,7 +172,20 @@ def migrate_database(low, high):
             """alter table uploads_dg_tmp
             rename to uploads;
         """,
-        ]
+        ],
+        [
+            """create table shareport
+        (
+            uuid     text not null
+                constraint shareport_pk
+                    primary key
+                constraint shareport_uniqpk
+                    unique,
+            name     text,
+            password text,
+            list     text default '[]'
+        );"""
+        ],
     ]
     for i in range(low, high):
         print(f"Migrate database from version {i} to {i+1}...")

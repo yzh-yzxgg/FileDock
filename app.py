@@ -532,7 +532,7 @@ def files_download_task():
             "code": 408,
             "success": False,
             "data": {"message": "Download session has timed out, please try again."},
-        } 
+        }
     return send_file(
         "uploads/" + file["uuid"], as_attachment=True, download_name=file["filename"]
     )
@@ -614,9 +614,424 @@ def files_delete():
     return {"code": 200, "success": True, "data": {"message": "File deleted"}}
 
 
-@app.route("/favicon.ico")
-def favicon():
-    return send_file("static/favicon/favicon.ico", mimetype="image/vnd.microsoft.icon")
+@app.route("/api/v1/shareport/create", methods=["POST"])
+def shareport_create():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        name = request.json["name"]
+        password = request.json["password"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    if session_id not in session:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+    pwdhash = hashlib.sha256(password.encode()).hexdigest()
+    creator = session[session_id]["uid"]
+    shareport_uuid = uuid.uuid4().hex
+    shareport_list = [
+        {
+            "uid": creator,
+            "permission": "orw",  # operator, read, write
+        }
+    ]
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE name=?", (name,))
+    if c.fetchone():
+        return {
+            "code": 409,
+            "success": False,
+            "data": {"message": "Shareport name already exists"},
+        }
+    c.execute(
+        "INSERT INTO shareport (uuid, name, password, list) VALUES (?, ?, ?, ?)",
+        (shareport_uuid, name, pwdhash, json.dumps(shareport_list)),
+    )
+    conn.commit()
+    conn.close()
+    return {
+        "code": 201,
+        "success": True,
+        "data": {"uuid": shareport_uuid, "name": name, "list": shareport_list},
+    }
+
+
+@app.route("/api/v1/shareport/info", methods=["POST"])
+def shareport_info():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        shareport_uuid = request.json["uuid"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    if not shareport:
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Shareport not found"},
+        }
+    shareport_list = json.loads(shareport[3])
+    if session_id in session:
+        uid = session[session_id]["uid"]
+        for user in shareport_list:
+            if user["uid"] == uid:
+                return {
+                    "code": 200,
+                    "success": True,
+                    "data": {
+                        "uuid": shareport[0],
+                        "name": shareport[1],
+                        "list": shareport_list,
+                    },
+                }
+        else:
+            return {
+                "code": 403,
+                "success": False,
+                "data": {"message": "Permission denied. You are not in the shareport"},
+            }
+    else:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+
+
+@app.route("/api/v1/shareport/join", methods=["POST"])
+def shareport_join():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        shareport_uuid = request.json["uuid"]
+        password = request.json["password"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    if not shareport:
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Shareport not found"},
+        }
+    shareport_list = json.loads(shareport[3])
+    pwdhash = hashlib.sha256(password.encode()).hexdigest()
+    if pwdhash != shareport[2]:
+        return {
+            "code": 403,
+            "success": False,
+            "data": {"message": "Incorrect password"},
+        }
+    if session_id in session:
+        uid = session[session_id]["uid"]
+        for user in shareport_list:
+            if user["uid"] == uid:
+                return {
+                    "code": 403,
+                    "success": False,
+                    "data": {"message": "You are already in the shareport"},
+                }
+        shareport_list.append({"uid": uid, "permission": "r"})
+        conn = sqlite3.connect(database)
+        c = conn.cursor()
+        c.execute(
+            "UPDATE shareport SET list=? WHERE uuid=?",
+            (json.dumps(shareport_list), shareport_uuid),
+        )
+        conn.commit()
+        conn.close()
+        return {
+            "code": 200,
+            "success": True,
+            "data": {
+                "uuid": shareport[0],
+                "name": shareport[1],
+                "list": shareport_list,
+            },
+        }
+    else:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+
+
+@app.route("/api/v1/shareport/leave", methods=["POST"])
+def shareport_leave():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        shareport_uuid = request.json["uuid"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    if not shareport:
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Shareport not found"},
+        }
+    shareport_list = json.loads(shareport[3])
+    if session_id in session:
+        uid = session[session_id]["uid"]
+        for user in shareport_list:
+            if user["uid"] == uid:
+                shareport_list.remove(user)
+                conn = sqlite3.connect(database)
+                c = conn.cursor()
+                c.execute(
+                    "UPDATE shareport SET list=? WHERE uuid=?",
+                    (json.dumps(shareport_list), shareport_uuid),
+                )
+                conn.commit()
+                conn.close()
+                return {
+                    "code": 200,
+                    "success": True,
+                    "data": {
+                        "uuid": shareport[0],
+                        "name": shareport[1],
+                        "list": shareport_list,
+                    },
+                }
+        else:
+            return {
+                "code": 403,
+                "success": False,
+                "data": {"message": "Permission denied. You are not in the shareport"},
+            }
+    else:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+
+
+@app.route("/api/v1/shareport/update", methods=["POST"])
+def shareport_update():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        shareport_uuid = request.json["uuid"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    if not shareport:
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Shareport not found"},
+        }
+    shareport_list = json.loads(shareport[3])
+    if session_id in session:
+        uid = session[session_id]["uid"]
+        for user in shareport_list:
+            if user["uid"] == uid and user["permission"].find("o") != -1:
+                break
+        else:
+            return {
+                "code": 403,
+                "success": False,
+                "data": {"message": "Permission denied. You are not the operator"},
+            }
+    else:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+    update_payload = {}
+    try:
+        update_payload["name"] = request.json["name"]
+    except KeyError:
+        pass
+    try:
+        update_payload["password"] = request.json["password"]
+    except KeyError:
+        pass
+    try:
+        update_payload["list"] = request.json["list"]
+    except KeyError:
+        pass
+    if not update_payload:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    for key, value in update_payload.items():
+        if key == "password":
+            value = hashlib.sha256(value.encode()).hexdigest()
+        shareport[key] = value
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute(
+        "UPDATE shareport SET name=?, password=?, list=? WHERE uuid=?",
+        (
+            shareport["name"],
+            shareport["password"],
+            json.dumps(shareport["list"]),
+            shareport_uuid,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return {
+        "code": 200,
+        "success": True,
+        "data": {
+            "uuid": shareport[0],
+            "name": shareport[1],
+            "list": shareport[3],
+        },
+    }
+
+
+@app.route("/api/v1/shareport/delete", methods=["POST"])
+def shareport_delete():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        shareport_uuid = request.json["uuid"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    if not shareport:
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Shareport not found"},
+        }
+    shareport_list = json.loads(shareport[3])
+    if session_id in session:
+        uid = session[session_id]["uid"]
+        for user in shareport_list:
+            if user["uid"] == uid and user["permission"].find("o") != -1:
+                break
+        else:
+            return {
+                "code": 403,
+                "success": False,
+                "data": {"message": "Permission denied. You are not the operator"},
+            }
+    else:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("DELETE FROM shareport WHERE uuid=?", (shareport_uuid,))
+    conn.commit()
+    conn.close()
+    return {"code": 200, "success": True, "data": {"message": "Shareport deleted"}}
+
+
+@app.route("/api/v1/shareport/files", methods=["POST"])
+def shareport_files():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        shareport_uuid = request.json["uuid"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    if not shareport:
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Shareport not found"},
+        }
+    shareport_list = json.loads(shareport[3])
+    if session_id in session:
+        uid = session[session_id]["uid"]
+        for user in shareport_list:
+            if user["uid"] == uid:
+                break
+        else:
+            return {
+                "code": 403,
+                "success": False,
+                "data": {"message": "Permission denied. You are not in the shareport"},
+            }
+    else:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM uploads WHERE shareport=?", (shareport_uuid,))
+    files = c.fetchall()
+    conn.close()
+    ret = {"code": 200, "success": True, "data": {"files": []}}
+    for file in files:
+        ret["data"]["files"].append(
+            {
+                "uuid": file[0],
+                "filename": file[1],
+                "code": file[2],
+                "upload_time": file[3],
+                "keep_time": file[4],
+                "upload_user": file[5],
+                "receive_user": file[6],
+            }
+        )
+    return ret, 200
 
 
 @app.route("/login")
@@ -636,8 +1051,14 @@ def shareport():
 
 @app.route("/shareport/<shareportname>")
 def shareport_page(shareportname):
-    #等待数据库支持
+    raise NotImplementedError("等待数据库支持")
     return render_template("shareport.html", shareportname=shareportname)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_file("static/favicon/favicon.ico", mimetype="image/vnd.microsoft.icon")
+
 
 @app.route("/")
 def index():
