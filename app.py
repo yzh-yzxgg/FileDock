@@ -749,7 +749,7 @@ def shareport_info():
         }
 
 
-@app.route("/api/v1/shareport/list", methods=["POST"])
+@app.route("/api/v1/shareport/list", methods=["GET"])
 def shareport_list():
     try:
         session_id = request.headers["X-Session-ID"]
