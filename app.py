@@ -1074,4 +1074,5 @@ crontab.start()
 scheduler.uploads_timeout()
 
 if __name__ == "__main__":
-    app.run()
+    import uvicorn
+    uvicorn.run(app)
