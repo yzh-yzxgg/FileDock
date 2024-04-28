@@ -100,7 +100,13 @@
             formData = new FormData();
             formData.append("fileInput", file);
             formData.append("keep_time", keep_time * 24 * 60 * 60);
-            formData.append("receive_user", 0);
+            // fetch /api/v1/shareport/list -> Shareports that user has already joined
+            // if select_shareport then {
+            //     shareport_uuid;
+            //     formData.append("shareport", shareport_uuid);
+            // } else {
+            //     Do nothing;
+            // }
             fileInput.value = null;
             var headers = {};
             if ($.cookie("session_id") != undefined) {
