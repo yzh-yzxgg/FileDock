@@ -8,7 +8,7 @@
     </script>
     <script>
         var user_type = 0;
-
+        var shareportid = "{{shareportid}}";
         function timestampToYMD(timestamp) {
             var date = new Date(timestamp * 1000);
             var year = date.getFullYear();
@@ -103,9 +103,11 @@
             formData = new FormData();
             formData.append("fileInput", file);
             formData.append("keep_time", keep_time * 24 * 60 * 60);
+            formData.append("shareport", shareportid);
             formData.append("receive_user", 0);
             fileInput.value = null;
             var headers = {};
+            console.log(shareportid);
             if ($.cookie("session_id") != undefined) {
                 headers["X-Session-ID"] = $.cookie("session_id");
             }
@@ -118,6 +120,7 @@
                 contentType: false,
             }).done((response) => {
                 if (response.success) {
+                    console.log(response);
                     code = response.data.code;
                     $("#file_name_dispaly")[0].innerText = file_name;
                     $(".code_display")[0].innerText = code;
@@ -180,6 +183,44 @@
                 }
                 else {
                     $("#download_warning")[0].innerText = "* 请检查取件码是否正确";
+                }
+            });
+        };
+        var shareportFileList = () => {
+            $.ajax({
+                url: "/api/v1/shareport/files",
+                method: "POST",
+                timeout: 0,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-ID": $.cookie("session_id"),
+                },
+                data: JSON.stringify({
+                    uuid: shareportid,
+                }),
+            }).done((response) => {
+                if (response.success) {
+                    console.log(response);
+                    $("#download_list_modal tbody").empty();
+                    for (var i = 0; i < response.data.files.length; i++) {
+                        $("#download_list_modal tbody").append(`
+                <tr>
+                  <td data-label="文件名">${response.data.files[i].filename}</td>
+                  <td data-label="上传时间">${timestampToYMD(response.data.files[i].upload_time)}</td>
+                  <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.files[i].code}</td>
+                  <td data-label="操作">
+                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i class="download icon"></i></button>
+                    <button class="deletebutton" onclick="deleteFile('${response.data.files[i].uuid.toString()}')"><i class="close red icon"></i></button>
+                  </td>
+                </tr>
+              `);
+                    }
+                    $("#download_list_modal")
+                        .modal({
+                            blurring: true,
+                            observeChanges: true,
+                        })
+                        .modal("show");
                 }
             });
         };
@@ -362,7 +403,7 @@
             <div class="content">
                 <div class="flex flex-col items-center">
                     <p class="text-xl font-bold mb-20">
-                        您的文件 <span id="file_name_dispaly"></span> 已成功上传
+                        您的文件 <span id="file_name_dispaly"></span> 已成功上传至该 <span style="color: rgb(66, 145, 246);">SharePort</span>
                     </p>
                     <p class="mb-6">您的取件码：</p>
                     <div class="code_display font-bold mb-11">123456</div>
@@ -371,7 +412,7 @@
                         复制
                       </a>
                     </div> -->
-                    <p class="m-10">接收文件时请输入此取件码。</p>
+                    <p class="m-10">接收文件时请点击 <span style="color: rgb(66, 145, 246);">SharePort</span> 中的接收或请输入此取件码。</p>
                     <p class="mb-1">
                         由
                         <a
@@ -517,12 +558,7 @@
         }
     );
     $("#download_button")[0].addEventListener("click", () => {
-        $("#download_modal_by_code")
-            .modal({
-                blurring: true,
-                observeChanges: true,
-            })
-            .modal("show");
+        shareportFileList();
     });
     $("#download_modal_by_code_close_button")[0].addEventListener("click", () => {
         $("#download_modal_by_code").modal("hide");
