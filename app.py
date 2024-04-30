@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import random
+import secrets
 import sqlite3
 import uuid
 from datetime import datetime
@@ -678,7 +679,7 @@ def shareport_create():
         }
     pwdhash = hashlib.sha256(password.encode()).hexdigest()
     creator = session[session_id]["uid"]
-    shareport_uuid = uuid.uuid4().hex
+    shareport_uuid = secrets.token_hex(4)
     shareport_list = [
         {
             "uid": creator,
@@ -1089,9 +1090,9 @@ def shareport():
     return render_template("shareportindex.html")
 
 
-@app.route("/shareport/<shareportname>")
-def shareport_page(shareportname):
-    return render_template("shareport.html", shareportname=shareportname)
+@app.route("/shareport/<shareportid>")
+def shareport_page(shareportid):
+    return render_template("shareport.html", shareportid=shareportid)
 
 
 @app.route("/favicon.ico")
