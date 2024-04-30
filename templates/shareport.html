@@ -2,7 +2,7 @@
 <html lang="zh_cn">
 <head>
     {% include 'head.html' %}
-    <title>FileDock</title>
+    <title id="shareport_title">FileDock</title>
     <script>
         window.shareportname = "{{shareportname}}";
     </script>
@@ -450,7 +450,25 @@
 </div>
 </div>
 <script>
-    $('#shareportname').html('SharePort - {{shareportname}}');
+    shareportid ="{{shareportid}}";
+    console.log(shareportid);
+    $.ajax({
+        url: "/api/v1/shareport/info",
+        method: "POST",
+        timeout: 0,
+        headers: {
+            "X-Session-ID": $.cookie("session_id"),
+            "Content-Type": "application/json",
+        },
+        data: JSON.stringify({
+            uuid: shareportid,
+        }),
+    }).done((response) => {
+        if (response.success) {
+            $("#shareportname")[0].innerText = "SharePort - "+response.data.name;
+            $("#shareport_title")[0].innerText = "FileDock | SharePort - "+response.data.name;
+        }
+    });
     $("#login_button")[0].addEventListener("click", () => {
         window.location.href = "/login";
     });

@@ -36,18 +36,20 @@
         </div>
     </div>
     <div class="flex flex-col flex-grow items-center" style="width: 90%;">
-        <a class="ui primary button labeled icon " role="button" onclick="createUserModal()"><i aria-hidden="true" class="plus icon"></i>加入&nbsp;SharePort</a>
+        <a class="ui primary button labeled icon " role="button" onclick="display_join_modal()"><i aria-hidden="true" class="plus icon"></i>加入&nbsp;SharePort</a>
         <table class="ui celled striped table" id="user_list">
             <thead>
             <tr>
                 <th>#</th>
                 <th>SharePort</th>
+                <th>SharePort&nbsp;id</th>
                 <th>操作</th>
             </tr>
             </thead>
             <tbody></tbody>
         </table>
-        <div id="create_user_modal" class="ui tiny modal">
+        <a class="ui primary button labeled icon " role="button" onclick="display_create_modal()"><i aria-hidden="true" class="plus icon"></i>创建&nbsp;SharePort</a>
+        <div id="join_shareport_modal" class="ui tiny modal">
             <div class="header">
                 <div class="flex items-center">
                     <button
@@ -56,7 +58,7 @@
                     >
                         <i class="close icon"></i>
                     </button>
-                    <h3 class="ml-2">创建用户</h3>
+                    <h3 class="ml-2">加入&nbsp;SharePort</h3>
                 </div>
             </div>
             <div class="content">
@@ -65,29 +67,54 @@
                     </p>
                     <div class="ui form mb-6 w-full">
                         <div class="huge field">
-                            <label>用户名</label>
+                            <label>SharePort&nbsp;id</label>
                             <input id="new_username" class="flex content-between" type="text"/>
                         </div>
                         <div class="huge field">
                             <label>密码</label>
                             <input id="new_password" class="flex content-between"  type="password"/>
                         </div>
-                        <div class="huge field">
-                            <label>重复密码</label>
-                            <input id="repeate_password" class="flex content-between" type="password"/>
-                        </div>
-                        <div class="ui form">
-                            <div class="field">
-                              <label>group</label>
-                              <select id="group_select">
-                                <option value="1">default</option>
-                                <option value="0">operator</option>
-                              </select>
-                            </div>
-                        </div>
                     </div>
                     <div class="flex justify-center mt-4">
                         <button class="ui button blue text-xl" id="create_user_button" onclick="joinSharePort()">
+                            加入
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="ceeate_shareport_modal" class="ui tiny modal">
+            <div class="header">
+                <div class="flex items-center">
+                    <button
+                            class="close icon button"
+                            id="create_user_modal_close_button"
+                    >
+                        <i class="close icon"></i>
+                    </button>
+                    <h3 class="ml-2">创建&nbsp;SharePort</h3>
+                </div>
+            </div>
+            <div class="content">
+                <div class="flex flex-col items-center">
+                    <p class="text-xl font-bold mb-4">
+                    </p>
+                    <div class="ui form mb-6 w-full">
+                        <div class="huge field">
+                            <label>SharePort&nbsp;名字</label>
+                            <input id="create_new_username" class="flex content-between" type="text"/>
+                        </div>
+                        <div class="huge field">
+                            <label>密码</label>
+                            <input id="create_new_password" class="flex content-between"  type="password"/>
+                        </div>
+                        <div class="huge field">
+                            <label>重复密码</label>
+                            <input id="create_repeate_password" class="flex content-between"  type="password"/>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button class="ui button blue text-xl" id="create_user_button" onclick="createSharePort()">
                             创建
                         </button>
                     </div>
@@ -118,13 +145,112 @@
     });
 </script>
 <script>
+    var display_join_modal = () => {
+        $("#join_shareport_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
+    var display_create_modal = () => {
+        $("#ceeate_shareport_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
+    var displaySharePortList = () =>{
+        $.ajax({
+            url: "/api/v1/shareport/list",
+            method: "GET",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+        }).done((response) => {
+            if (response.success) {
+                var shareport_list = response.data.shareports;
+                var tbody = $("#user_list tbody")[0];
+                tbody.innerHTML = "";
+                for (var i = 0; i < shareport_list.length; i++) {
+                    var tr = document.createElement("tr");
+                    var td1 = document.createElement("td");
+                    td1.innerText = i + 1;
+                    var td2 = document.createElement("td");
+                    td2.innerText = shareport_list[i].name;
+                    var td3 = document.createElement("td");
+                    td3.innerText = shareport_list[i].uuid;
+                    var td4 = document.createElement("td");
+                    var button = document.createElement("button");
+                    button.classList.add("ui", "button", "blue", "text-xl");
+                    button.innerText = "加入";
+                    button.onclick = () => {
+                        window.location.href = "/shareport/" + td3.innerText;
+                    };
+                    td4.appendChild(button);
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    tr.appendChild(td3);
+                    tr.appendChild(td4);
+                    tbody.appendChild(tr);
+                }
+            }
+        });
+    };
     var joinSharePort = () => {
-
+        var shareport_id = $("#new_username")[0].value;
+        var password = $("#new_password")[0].value;
+        $.ajax({
+            url: "/api/v1/shareport/join",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uuid: shareport_id,
+                password: password,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+        });
+    };
+    var createSharePort = () => {
+        var shareport_name = $("#create_new_username")[0].value;
+        var password = $("#create_new_password")[0].value;
+        var repeatPassword = $("#create_repeate_password")[0].value;
+        if (password !== repeatPassword) {
+            alert("两次输入的密码不一致"+password+repeatPassword);
+            return;
+        }
+        $.ajax({
+            url: "/api/v1/shareport/create",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                name: shareport_name,
+                password: password,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+        });
     };
 </script>
 <script>
     $(".ui.dropdown").dropdown();
-
+    displaySharePortList();
     var display_username = () => {
         disname_obj = $("#display_username")[0];
         disname_obj.classList.remove("hidden");
