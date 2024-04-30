@@ -45,7 +45,11 @@
             if (response.success) {
                 $.cookie("uid", response.data.uid, {expires: 365});
                 $.cookie("session_id", response.data.session_id, {expires: 365});
-                window.location.href = "/";
+                if (document.referrer) {
+                    window.location.href = document.referrer;
+                } else {
+                    window.history.back();
+                }
             } else {
                 $("#message")[0].innerText = "用户名或密码错误。"
                 $(".ui.negative.message").removeClass("hidden");
