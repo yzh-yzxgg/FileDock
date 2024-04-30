@@ -446,6 +446,7 @@ def files_create():
                 "data": {"message": "Permission denied. You are not in the shareport"},
             }
     except KeyError:
+        targetshareport = None
         shareport = None
     fileuuid = uuid.uuid4().hex
     filename = request.files["fileInput"].filename
@@ -688,13 +689,6 @@ def shareport_create():
     ]
     conn = sqlite3.connect(database)
     c = conn.cursor()
-    c.execute("SELECT * FROM shareport WHERE name=?", (name,))
-    if c.fetchone():
-        return {
-            "code": 409,
-            "success": False,
-            "data": {"message": "Shareport name already exists"},
-        }
     c.execute(
         "INSERT INTO shareport (uuid, name, password, list) VALUES (?, ?, ?, ?)",
         (shareport_uuid, name, pwdhash, json.dumps(shareport_list)),
@@ -878,11 +872,11 @@ def shareport_leave():
             "data": {"message": "Permission denied. You are not in the shareport"},
         }
     else:
-        shareport_list = json.loads(shareport["list"])
+        shareport_list = shareport["list"]
         uid = session[session_id]["uid"]
         for user in shareport_list:
             if user["uid"] == uid:
-                shareport_list.reove(user)
+                shareport_list.remove(user)
                 conn = sqlite3.connect(database)
                 c = conn.cursor()
                 c.execute(
