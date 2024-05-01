@@ -202,7 +202,7 @@
                 if (response.success) {
                     console.log(response);
                     $("#download_list_modal tbody").empty();
-                    for (var i = 0; i < response.data.files.length; i++) {
+                    for (var i = response.data.files.length-1; i >= 0; i--) {
                         $("#download_list_modal tbody").append(`
                 <tr>
                   <td data-label="文件名">${response.data.files[i].filename}</td>
@@ -283,7 +283,7 @@
                 if (response.success) {
                     console.log(response);
                     $("#download_list_modal tbody").empty();
-                    for (var i = 0; i < response.data.files.length; i++) {
+                    for (var i = response.data.files.length-1; i >= 0; i--) {
                         $("#download_list_modal tbody").append(`
                 <tr>
                   <td data-label="文件名">${response.data.files[i].filename}</td>
