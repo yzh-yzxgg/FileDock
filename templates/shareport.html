@@ -209,7 +209,7 @@
                   <td data-label="上传时间">${timestampToYMD(response.data.files[i].upload_time)}</td>
                   <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.files[i].code}</td>
                   <td data-label="操作">
-                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i class="download icon"></i></button>
+                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i id="${response.data.files[i].code}_icon" class="download blue icon"></i></button>
                     <button class="deletebutton" onclick="deleteFile('${response.data.files[i].uuid.toString()}')"><i class="close red icon"></i></button>
                   </td>
                 </tr>
@@ -262,6 +262,11 @@
                 data: JSON.stringify(data),
             }).done((response) => {
                 if (response.success) {
+                    icon_id = code+"_icon";
+                    $("#"+icon_id).removeClass("blue");
+                    $("#"+icon_id).removeClass("download");
+                    $("#"+icon_id).addClass("green");
+                    $("#"+icon_id).addClass("check");
                     window.location.href = "/api/v1/files/download?task_uuid=" + response.data.task_uuid.toString();
                 }
             });
@@ -290,7 +295,7 @@
                   <td data-label="上传时间">${timestampToYMD(response.data.files[i].upload_time)}</td>
                   <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.files[i].code}</td>
                   <td data-label="操作">
-                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i class="download icon"></i></button>
+                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i id="${response.data.files[i].code}_icon" class="download blue icon"></i></button>
                     <button class="deletebutton" onclick="deleteFile('${response.data.files[i].uuid.toString()}')"><i class="close red icon"></i></button>
                   </td>
                 </tr>

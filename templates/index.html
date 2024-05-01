@@ -59,13 +59,9 @@
                                         $("#upload_warning")[0].innerText = "* 最多仅能保存 30 天";
 
                                     } else {
-                                        $("#upload_modal_second").modal("hide");
-                                        $("#upload_modal").modal("hide");
                                         uploadFile(keep_time);
                                     }
                                 } else if (response.data.group == "operator") {
-                                    $("#upload_modal_second").modal("hide");
-                                    $("#upload_modal").modal("hide");
                                     uploadFile(keep_time);
                                 }
                             }
@@ -75,8 +71,6 @@
                             $("#upload_warning")[0].innerText = "* 你尚未登录，最多仅能保存 1 天";
 
                         } else {
-                            $("#upload_modal_second").modal("hide");
-                            $("#upload_modal").modal("hide");
                             uploadFile(keep_time);
                         }
                     }
@@ -86,8 +80,6 @@
                     $("#upload_warning")[0].innerText = "* 你尚未登录，最多仅能保存 1 天";
 
                 } else {
-                    $("#upload_modal_second").modal("hide");
-                    $("#upload_modal").modal("hide");
                     uploadFile(keep_time);
                 }
             }
@@ -121,6 +113,9 @@
                 contentType: false,
             }).done((response) => {
                 if (response.success) {
+                    $("#upload_modal_second").modal("hide");
+                    $("#upload_modal").modal("hide");
+                    $("#upload_modal_button").removeClass("loading");
                     code = response.data.code;
                     $("#file_name_dispaly")[0].innerText = file_name;
                     $(".code_display")[0].innerText = code;
@@ -161,6 +156,7 @@
                 data: JSON.stringify(data),
             }).done((response) => {
                 if (response.success) {
+                    $("#download_by_code_button").removeClass("loading");
                     $("#download_modal_by_code").modal("hide");
                     $("#download_list_modal").modal("hide");
                     $("#download_list_modal tbody").empty();
@@ -170,7 +166,7 @@
                 <td data-label="上传时间">${timestampToYMD(response.data.filemeta.upload_time)}</td>
                 <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.filemeta.code}</td>
                 <td data-label="操作">
-                  <button class="downloadbutton" onclick="downloadFileByClick('${response.data.task_uuid.toString()}')"><i class="download icon"></i></button>
+                  <button class="downloadbutton" onclick="downloadFileByClick('${response.data.task_uuid.toString()}')"><i id="${response.data.task_uuid.toString()}_icon" class="download blue icon"></i></button>
                 </td>
               </tr>
             `);
@@ -183,11 +179,18 @@
                 }
                 else {
                     $("#download_warning")[0].innerText = "* 请检查取件码是否正确";
+                    $("#download_by_code_button").removeClass("loading");
                 }
             });
         };
         var downloadFileByClick = (task_uuid) => {
-            console.log("click");
+            console.log(task_uuid);
+            icon_id = task_uuid+"_icon";
+            console.log(icon_id);
+            $("#"+icon_id).removeClass("blue");            
+            $("#"+icon_id).removeClass("download");
+            $("#"+icon_id).addClass("green");
+            $("#"+icon_id).addClass("check");
             window.location.href = "/api/v1/files/download?task_uuid=" + task_uuid;
         }
         var deleteFile = (task_uuid) => {
@@ -224,6 +227,11 @@
                 data: JSON.stringify(data),
             }).done((response) => {
                 if (response.success) {
+                    icon_id = code+"_icon";
+                    $("#"+icon_id).removeClass("blue");
+                    $("#"+icon_id).removeClass("download");
+                    $("#"+icon_id).addClass("green");
+                    $("#"+icon_id).addClass("check");
                     window.location.href = "/api/v1/files/download?task_uuid=" + response.data.task_uuid.toString();
                 }
             });
@@ -252,7 +260,7 @@
                   <td data-label="上传时间">${timestampToYMD(response.data.files[i].upload_time)}</td>
                   <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.files[i].code}</td>
                   <td data-label="操作">
-                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i class="download icon"></i></button>
+                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i id="${response.data.files[i].code}_icon" class="download blue icon"></i></button>
                     <button class="deletebutton" onclick="deleteFile('${response.data.files[i].uuid.toString()}')"><i class="close red icon"></i></button>
                   </td>
                 </tr>
@@ -471,6 +479,7 @@
 </script>
 <script>
     $("#upload_button")[0].addEventListener("click", () => {
+        $("#upload_modal_button").removeClass("loading");
         $("#fileInput").click();
     });
     $("#fileInput").on("input", () => {
@@ -482,6 +491,7 @@
             .modal("show");
     });
     $("#upload_modal_button")[0].addEventListener("click", () => {
+        $("#upload_modal_button").addClass("loading");
         keep_time = $("#keep_time_form")[0].value;
         if (Number.isInteger(parseInt(keep_time)) && parseInt(keep_time) > 0) {
             getUserTypeAndContinue(keep_time);
@@ -501,6 +511,7 @@
         }
     );
     $("#download_button")[0].addEventListener("click", () => {
+        $("#download_warning")[0].innerText = "";
         $("#download_modal_by_code")
             .modal({
                 blurring: true,
@@ -517,6 +528,8 @@
         $("#download_list_modal").modal("hide");
     });
     $("#download_by_code_button")[0].addEventListener("click", () => {
+        $("#download_by_code_button").removeClass("loading");
+        $("#download_by_code_button").addClass("loading");
         code = $("#download_modal_by_code input")[0].value;
         downloadByCode(code);
     });
