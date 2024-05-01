@@ -316,17 +316,17 @@
 <div class="app">
     <div class="mb-1 z-40 w-full">
         <div class="max-w-8xl mx-auto text-lg">
-          <div class="py-4 border-b border-slate-900/10 lg:px-1 lg:border-0 dark:border-slate-300/10 mx-4 lg:mx-0">
+          <div class="py-4 border-b border-slate-900/10 lg:px-8 lg:border-0 dark:border-slate-300/10 mx-4 lg:mx-0">
             <div class="flex justify-between items-center">
                 <div class="ui dropdown">
                     <input type="hidden" name="filters">
-                    <span id="shareportname" class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SharePort</span>
+                    <span id="shareportname" class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-purple-500 to-purple-500">SharePort</span>
                     <div class="menu">
                         <div class="item" id="FileDock">
-                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400">FileDock</span>
+                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">FileDock</span>
                         </div>
                         <div class="item" id="SharePort">
-                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400">SharePort</span>
+                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SharePort</span>
                         </div>
                     </div>
                 </div>
@@ -512,7 +512,6 @@
     }).done((response) => {
         if (response.success) {
             $("#shareportname")[0].innerText = "SharePort - "+response.data.name;
-            $("#shareport_title")[0].innerText = "FileDock | SharePort - "+response.data.name;
         }
     });
     $("#login_button")[0].addEventListener("click", () => {
