@@ -812,7 +812,17 @@ def shareport_join():
             "success": False,
             "data": {"message": "You are already in the shareport"},
         }
-    shareport_list = shareport["list"]
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shareport WHERE uuid=?", (shareport_uuid,))
+    shareport = c.fetchone()
+    conn.close()
+    shareport = {
+        "uuid": shareport[0],
+        "name": shareport[1],
+        "password": shareport[2],
+        "list": json.loads(shareport[3]),
+    }
     pwdhash = hashlib.sha256(password.encode()).hexdigest()
     if pwdhash != shareport["password"]:
         return {
