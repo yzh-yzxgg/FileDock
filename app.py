@@ -823,6 +823,7 @@ def shareport_join():
         "password": shareport[2],
         "list": json.loads(shareport[3]),
     }
+    shareport_list = shareport["list"]
     pwdhash = hashlib.sha256(password.encode()).hexdigest()
     if pwdhash != shareport["password"]:
         return {
