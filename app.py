@@ -428,9 +428,13 @@ def group_create():
             "success": False,
             "data": {"message": "Group already exists"},
         }
+    if operations:
+        operator = 1
+    else:
+        operator = 0
     c.execute(
-        "INSERT INTO groups (name, operations, max_size) VALUES (?, ?, ?)",
-        (name, 1 if operations else 0, max_size),
+        "INSERT INTO groups (name, operator, max_size) VALUES (?, ?, ?)",
+        (name, 1 if operator else 0, max_size),
     )
     conn.commit()
     conn.close()

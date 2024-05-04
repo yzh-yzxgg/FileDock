@@ -36,7 +36,7 @@
                 "Content-Type": "application/json",
             },
             data: JSON.stringify({
-                group: group,
+                name: group,
             }),
         }).done((response) => {
             if (response.success) {
@@ -193,6 +193,7 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
                 </div>
             </div>
 
@@ -204,7 +205,10 @@
         $("[data-menu]").addClass("cursor-pointer");
         $("[data-menu]").on("click", function () {
             $(this).removeClass("shadow");
-            var menu = $(this).attr("data-menu");
+            var menu = $(this).attr("data-menu");   
+            var url = new URL(window.location.href);
+            url.searchParams.set("tab", menu);
+            window.history.pushState({}, "", url);
             $("[data-menu]").each(function () {
                 if ($(this).attr("data-menu") === menu) {
                     $(this).addClass("shadow");
@@ -220,6 +224,17 @@
                 }
             });
         });
+        var url = new URL(window.location.href);
+        var tab = url.searchParams.get("tab");
+        if (tab) {
+            $("[data-menu]").each(function () {
+                if ($(this).attr("data-menu") === tab) {
+                    $(this).click();
+                }
+            });
+        } else {
+            $("[data-menu]").first().click();
+        }
     });
 </script>
 <script>
@@ -280,7 +295,7 @@
             }),
         }).done((response) => {
             if (response.success) {
-                window.location.reload();
+                window.location.href = "/manage?tab=users";
             } else {
                 console.log("Request failed with code: " + response.code);
             }
@@ -308,7 +323,7 @@
                     option = "<option value=\"" + group.name + "\">" + group.name + "</option>";
                 }
                 $("#group_select").append(option);
-                var row = `<tr><td>${group.name}</td><td>${group.operations ? "Yes" : "No"}</td><td>${group.max_size} MB</td><td><button class=\"delete group\"><i class=\"close red icon\"></i></button></td></tr>`;
+                var row = `<tr><td>${group.name}</td><td>${group.operations ? "Yes" : "No"}</td><td>${group.max_size} MB</td><td><button class="delete group" onclick="deleteGroup('${response.data.groups[i].name}')"><i class="close red icon"></i></button></td></tr>`;
                 $("#group_list tbody").append(row);
             }
         } else {
@@ -328,7 +343,7 @@
     };
     var createGroup = function () {
         var groupname = $("#new_groupname").val();
-        var operations = $("#new_operations").val();
+        var operations = $("#new_operations").val() == "true" ? true : false;
         var max_size = $("#new_max_size").val();
         $.ajax({
             url: "/api/v1/group/create",
@@ -339,15 +354,13 @@
                 "Content-Type": "application/json",
             },
             data: JSON.stringify({
-                "groupdata": {
-                    "name": groupname,
-                    "operations": operations,
-                    "max_size": max_size
-                }
+                "name": groupname,
+                "operations": operations,
+                "max_size": max_size
             }),
         }).done((response) => {
             if (response.success) {
-                window.location.reload();
+                window.location.href = "/manage?tab=groups";
             } else {
                 console.log("Request failed with code: " + response.code);
             }
