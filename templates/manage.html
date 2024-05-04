@@ -26,6 +26,26 @@
             }
         });
     };
+    var deleteGroup = (group) => {
+        $.ajax({
+            url: "/api/v1/group/delete",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                group: group,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                console.log("Request failed with code: " + response.code);
+            }
+        });
+    };
 </script>
 <body>
     <div class="flex md:flex-row flex-col w-full md:h-full">
@@ -101,10 +121,7 @@
                                 <div class="ui form">
                                     <div class="field">
                                     <label>权限组</label>
-                                    <select id="group_select">
-                                        <option value="1">default</option>
-                                        <option value="0">operator</option>
-                                    </select>
+                                    <select id="group_select"></select>
                                     </div>
                                 </div>
                             </div>
@@ -117,6 +134,68 @@
                     </div>
                 </div>
             </div>
+            <div class="hidden" data-content="groups">
+                <a class="ui primary button labeled icon " role="button" onclick="createGroupModal()"><i aria-hidden="true" class="plus icon"></i>新建权限组</a>
+                <table class="ui celled striped table" id="group_list">
+                    <thead>
+                    <tr>
+                        <th>权限组名</th>
+                        <th>管理员？</th>
+                        <th>最大上传大小</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="create_group_modal" class="ui tiny modal">
+                    <div class="header">
+                        <div class="flex items-center">
+                            <button
+                                    class="close icon button"
+                                    id="create_group_modal_close_button"
+                            >
+                                <i class="close icon"></i>
+                            </button>
+                            <h3 class="ml-2">新建权限组</h3>
+                        </div>
+                    </div>
+                    <div class="content">
+                        <div class="flex flex-col items-center">
+                            <p class="text-xl font-bold mb-4">
+                            </p>
+                            <div class="ui form mb-6 w-full">
+                                <div class="huge field">
+                                    <label>权限组名</label>
+                                    <input id="new_groupname" class="flex content-between" type="text"/>
+                                </div>
+                            </div>
+                            <div class="ui form mb-6 w-full">
+                                <div class="huge field">
+                                    <label>管理员？</label>
+                                    <select id="new_operations">
+                                        <option value="false">No</option>
+                                        <option value="true">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ui form mb-6 w-full">
+                                <div class="huge field">
+                                    <label>最大上传大小</label>
+                                    <div class="flex">
+                                        <input id="new_max_size" class="flex content-between" type="number"/>
+                                        <p class="ml-2 text-lg">MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-center mt-4">
+                                <button class="ui button blue text-xl" id="create_group_button" onclick="createGroup()">
+                                    创建
+                                </button>
+                            </div>
+                        </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </body>
@@ -179,8 +258,6 @@
         var password = $("#new_password").val();
         var repeatPassword = $("#repeate_password").val();
         var group = $("#group_select").val();
-        if(group == 0) group = "operator";
-        else if(group == 1) group = "default";
         console.log(group)
         if (password !== repeatPassword) {
             alert("两次输入的密码不一致");
@@ -199,6 +276,73 @@
                     "username": username,
                     "password": password,
                     "group": group
+                }
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                console.log("Request failed with code: " + response.code);
+            }
+        });
+    };
+</script>
+<script>
+    // Get groups
+    $.ajax({
+        url: "/api/v1/group/list",
+        method: "GET",
+        timeout: 0,
+        headers: {
+            "X-Session-ID": $.cookie("session_id"),
+        },
+    }).done((response) => {
+        if (response.success) {
+            var groups = response.data.groups;
+            for (var i = 0; i < groups.length; i++) {
+                var group = groups[i];
+                var option = "";
+                if(group.operations) {
+                    option = "<option value=\"" + group.name + "\">🛠️ " + group.name + "</option>";
+                } else {
+                    option = "<option value=\"" + group.name + "\">" + group.name + "</option>";
+                }
+                $("#group_select").append(option);
+                var row = `<tr><td>${group.name}</td><td>${group.operations ? "Yes" : "No"}</td><td>${group.max_size} MB</td><td><button class=\"delete group\"><i class=\"close red icon\"></i></button></td></tr>`;
+                $("#group_list tbody").append(row);
+            }
+        } else {
+            console.log("Failed to get group list: " + response.code);
+        }
+    });
+    $("#create_group_modal_close_button").on("click", function() {
+        $("#create_group_modal").modal("hide");
+    });
+    var createGroupModal = function () {
+        $("#create_group_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
+    var createGroup = function () {
+        var groupname = $("#new_groupname").val();
+        var operations = $("#new_operations").val();
+        var max_size = $("#new_max_size").val();
+        $.ajax({
+            url: "/api/v1/group/create",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                "groupdata": {
+                    "name": groupname,
+                    "operations": operations,
+                    "max_size": max_size
                 }
             }),
         }).done((response) => {
