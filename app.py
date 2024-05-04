@@ -379,6 +379,25 @@ def user_changepass():
     return {"code": 200, "success": True, "data": {"message": "Password changed"}}
 
 
+@app.route("/api/v1/group/list", methods=["GET"])
+def group_list():
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM groups")
+    groups = c.fetchall()
+    conn.close()
+    ret = {"code": 200, "success": True, "data": {"groups": []}}
+    for group in groups:
+        ret["data"]["groups"].append(
+            {
+                "name": group[0],
+                "operations": True if group[1] == 1 else False,
+                "max_size": group[2],
+            }
+        )
+    return ret, 200
+
+
 @app.route("/api/v1/session/verify", methods=["GET"])
 def session_verify():
     try:
