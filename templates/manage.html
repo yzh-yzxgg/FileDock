@@ -6,7 +6,7 @@
     <title>管理面板</title>
 </head>
 <script>
-    var deleteUser = function (uid) {
+    var deleteUser = (uid) => {
         $.ajax({
             url: "/api/v1/user/delete",
             method: "POST",
@@ -28,67 +28,121 @@
     };
 </script>
 <body>
-    <a class="ui primary button labeled icon " role="button" onclick="createUserModal()"><i aria-hidden="true" class="plus icon"></i>新建用户</a>
-    <table class="ui celled striped table" id="user_list">
-        <thead>
-        <tr>
-            <th>uid</th>
-            <th>username</th>
-            <th>group</th>
-            <th>操作</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    <div id="create_user_modal" class="ui tiny modal">
-        <div class="header">
-            <div class="flex items-center">
-                <button
-                        class="close icon button"
-                        id="create_user_modal_close_button"
-                >
-                    <i class="close icon"></i>
-                </button>
-                <h3 class="ml-2">创建用户</h3>
+    <div class="flex md:flex-row flex-col w-full md:h-full">
+        <div class="md:w-1/4 lg:w-1/5 rounded shadow-lg p-3 bg-white">
+            <h1 class="font-bold text-lg mb-5">FileDock 管理面板</h1>
+            <div class="flex items-center p-2 mb-3 rounded border shadow" data-menu="overview">
+                <span><i class="home icon"></i></span>
+                <span class="ml-2">概述</span>
+            </div>
+            <div class="flex items-center p-2 mb-3 rounded border" data-menu="users">
+                <span><i class="user icon"></i></span>
+                <span class="ml-2">用户</span>
+            </div>
+            <div class="flex items-center p-2 mb-3 rounded border" data-menu="groups">
+                <span><i class="circle icon"></i></span>
+                <span class="ml-2">权限组</span>
+            </div>
+            <div class="flex items-center p-2 mb-3 rounded border" data-menu="files">
+                <span><i class="file icon"></i></span>
+                <span class="ml-2">文件</span>
+            </div>
+            <div class="flex items-center p-2 mb-3 rounded border" data-menu="shareport">
+                <span><i class="share icon"></i></span>
+                <span class="ml-2">共享空间</span>
             </div>
         </div>
-        <div class="content">
-            <div class="flex flex-col items-center">
-                <p class="text-xl font-bold mb-4">
-                </p>
-                <div class="ui form mb-6 w-full">
-                    <div class="huge field">
-                        <label>用户名</label>
-                        <input id="new_username" class="flex content-between" type="text"/>
-                    </div>
-                    <div class="huge field">
-                        <label>密码</label>
-                        <input id="new_password" class="flex content-between"  type="password"/>
-                    </div>
-                    <div class="huge field">
-                        <label>重复密码</label>
-                        <input id="repeate_password" class="flex content-between" type="password"/>
-                    </div>
-                    <div class="ui form">
-                        <div class="field">
-                          <label>group</label>
-                          <select id="group_select">
-                            <option value="1">default</option>
-                            <option value="0">operator</option>
-                          </select>
+        <div class="md:ml-3 lg:w-4/5 md:w-3/4 p-3">
+            <div class="" data-content="overview">
+                <span class="text-4xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">FileDock</span>
+            </div>
+            <div class="hidden" data-content="users">
+                <a class="ui primary button labeled icon " role="button" onclick="createUserModal()"><i aria-hidden="true" class="plus icon"></i>新建用户</a>
+                <table class="ui celled striped table" id="user_list">
+                    <thead>
+                    <tr>
+                        <th>UID</th>
+                        <th>用户名</th>
+                        <th>权限组</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="create_user_modal" class="ui tiny modal">
+                    <div class="header">
+                        <div class="flex items-center">
+                            <button
+                                    class="close icon button"
+                                    id="create_user_modal_close_button"
+                            >
+                                <i class="close icon"></i>
+                            </button>
+                            <h3 class="ml-2">创建用户</h3>
                         </div>
                     </div>
-                </div>
-                <div class="flex justify-center mt-4">
-                    <button class="ui button blue text-xl" id="create_user_button" onclick="createUser()">
-                        创建
-                    </button>
+                    <div class="content">
+                        <div class="flex flex-col items-center">
+                            <p class="text-xl font-bold mb-4">
+                            </p>
+                            <div class="ui form mb-6 w-full">
+                                <div class="huge field">
+                                    <label>用户名</label>
+                                    <input id="new_username" class="flex content-between" type="text"/>
+                                </div>
+                                <div class="huge field">
+                                    <label>密码</label>
+                                    <input id="new_password" class="flex content-between"  type="password"/>
+                                </div>
+                                <div class="huge field">
+                                    <label>重复密码</label>
+                                    <input id="repeate_password" class="flex content-between" type="password"/>
+                                </div>
+                                <div class="ui form">
+                                    <div class="field">
+                                    <label>权限组</label>
+                                    <select id="group_select">
+                                        <option value="1">default</option>
+                                        <option value="0">operator</option>
+                                    </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-center mt-4">
+                                <button class="ui button blue text-xl" id="create_user_button" onclick="createUser()">
+                                    创建
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
 </body>
+<script>
+    $(document).ready(function () {
+        $("[data-menu]").addClass("cursor-pointer");
+        $("[data-menu]").on("click", function () {
+            $(this).removeClass("shadow");
+            var menu = $(this).attr("data-menu");
+            $("[data-menu]").each(function () {
+                if ($(this).attr("data-menu") === menu) {
+                    $(this).addClass("shadow");
+                } else {
+                    $(this).removeClass("shadow");
+                }
+            });
+            $("[data-content]").each(function () {
+                if ($(this).attr("data-content") === menu) {
+                    $(this).removeClass("hidden");
+                } else {
+                    $(this).addClass("hidden");
+                }
+            });
+        });
+    });
+</script>
 <script>
     $.ajax({
         url: "/api/v1/user/list",
