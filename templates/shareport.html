@@ -182,6 +182,12 @@
             });
         };
         var shareportFileList = () => {
+            $("#download_list_modal")
+                .modal({
+                    blurring: true,
+                    observeChanges: true,
+                })
+                .modal("show");
             $.ajax({
                 url: "/api/v1/shareport/files",
                 method: "POST",
@@ -210,12 +216,6 @@
                 </tr>
               `);
                     }
-                    $("#download_list_modal")
-                        .modal({
-                            blurring: true,
-                            observeChanges: true,
-                        })
-                        .modal("show");
                 }
             });
         };
@@ -267,6 +267,12 @@
             });
         };
         var downloadFileList = () => {
+            $("#download_list_modal")
+                .modal({
+                    blurring: true,
+                    observeChanges: true,
+                })
+                .modal("show");
             $.ajax({
                 url: "/api/v1/files/list",
                 type: "POST",
@@ -296,12 +302,6 @@
                 </tr>
               `);
                     }
-                    $("#download_list_modal")
-                        .modal({
-                            blurring: true,
-                            observeChanges: true,
-                        })
-                        .modal("show");
                 }
             });
         };

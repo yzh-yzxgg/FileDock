@@ -237,6 +237,12 @@
             });
         };
         var downloadFileList = () => {
+            $("#download_list_modal")
+                .modal({
+                    blurring: true,
+                    observeChanges: true,
+                })
+                .modal("show");
             $.ajax({
                 url: "/api/v1/files/list",
                 type: "POST",
@@ -266,12 +272,6 @@
                 </tr>
               `);
                     }
-                    $("#download_list_modal")
-                        .modal({
-                            blurring: true,
-                            observeChanges: true,
-                        })
-                        .modal("show");
                 }
             });
         };
