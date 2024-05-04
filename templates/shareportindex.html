@@ -127,6 +127,41 @@
                 </div>
             </div>
         </div>
+        <div id="change_shareport_password_modal" class="ui tiny modal">
+            <div class="header">
+                <div class="flex items-center">
+                    <button
+                            class="close icon button"
+                            id="change_shareport_password_modal_close_button"
+                    >
+                        <i class="close icon"></i>
+                    </button>
+                    <h3 class="ml-2">修改密码</h3>
+                </div>
+            </div>
+            <div class="content">
+                <div class="flex flex-col items-center">
+                    <p class="text-xl font-bold mb-4">
+                    </p>
+                    <div class="ui form mb-6 w-full">
+                        <div class="huge field">
+                            <label>密码</label>
+                            <input id="change_password" class="flex content-between"  type="text"/>
+                        </div>
+                        <div class="huge field">
+                            <label>重复密码</label>
+                            <input id="change_repeate_password" class="flex content-between"  type="text"/>
+                        </div>
+                        <p class="mb-6" id="create_passward_warning" style="color: red;"></p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button class="ui button blue text-xl" id="change_password_button" onclick="changePasswordBt()">
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <div class="flex flex-col items-end w-full">
@@ -135,6 +170,14 @@
 </div>
 <script>
     var user_exit = (session_id) => {
+        var cookies = document.cookie.split(";");
+        
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            $.removeCookie(name);
+        }
         $.ajax({
             url: "/api/v1/user/logout",
             method: "POST",
@@ -190,6 +233,44 @@
             }
         });
     };
+    var uuidquanju;
+    var changeSpPassword = (uuid) => {
+        uuidquanju = uuid;
+        $("#change_shareport_password_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    }
+    var changePasswordBt = () => {
+        var password = $("#change_password")[0].value;
+        var repeatPassword = $("#change_repeate_password")[0].value;
+        if (password !== repeatPassword) {
+            $("#create_passward_warning")[0].innerText = "* 两次输入的密码不一致";
+            return;
+        }
+        $.ajax({
+            url: "/api/v1/shareport/update",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uuid: uuidquanju,
+                password: password,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+            else {
+                $("#create_passward_warning")[0].innerText = "* " + response.data.message;
+            }
+        });
+    }
     var display_create_modal = () => {
         $("#ceeate_shareport_modal")
             .modal({
@@ -209,6 +290,7 @@
             },
         }).done((response) => {
             if (response.success) {
+                console.log(response.data);
                 var shareport_list = response.data.shareports;
                 var tbody = $("#user_list tbody")[0];
                 tbody.innerHTML = "";
@@ -221,9 +303,13 @@
                         <td>
                             <button class="ui button blue text-xl" onclick="window.location.href = '/shareport/' + '${shareport_list[i].uuid}'">加入</button>
                             <button class="ui button red text-xl" onclick="deleteSharePort('${shareport_list[i].uuid}')">删除</button>
+                            <button class="ui button hidden text-xl" onclick="changeSpPassword('${shareport_list[i].uuid}')" id="${shareport_list[i].uuid}_setup">设置</button>
                         </td>
                     </tr>`;
                     tbody.innerHTML += tr;
+                    if(shareport_list[i].list[0].uid == $.cookie("uid")){
+                        $(`#${shareport_list[i].uuid}_setup`)[0].classList.remove("hidden");
+                    }
                 }
             }
         });
