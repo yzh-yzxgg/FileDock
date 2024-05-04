@@ -398,6 +398,83 @@ def group_list():
     return ret, 200
 
 
+@app.route("/api/v1/group/create", methods=["POST"])
+def group_create():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        name = request.json["name"]
+        operations = request.json["operations"]
+        max_size = request.json["max_size"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    if session_id not in session:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+    if not get_group(get_user_group(session_id))["operations"]:
+        return {"code": 403, "success": False, "data": {"message": "Not allowed"}}
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM groups WHERE name=?", (name,))
+    if c.fetchone():
+        return {
+            "code": 409,
+            "success": False,
+            "data": {"message": "Group already exists"},
+        }
+    c.execute(
+        "INSERT INTO groups (name, operations, max_size) VALUES (?, ?, ?)",
+        (name, 1 if operations else 0, max_size),
+    )
+    conn.commit()
+    conn.close()
+    return {
+        "code": 201,
+        "success": True,
+        "data": {"name": name, "operations": operations, "max_size": max_size},
+    }
+    
+
+@app.route("/api/v1/group/delete", methods=["POST"])
+def group_delete():
+    try:
+        session_id = request.headers["X-Session-ID"]
+        name = request.json["name"]
+    except KeyError:
+        return {
+            "code": 400,
+            "success": False,
+            "data": {"message": "Invalid request"},
+        }
+    if session_id not in session:
+        return {
+            "code": 401,
+            "success": False,
+            "data": {"message": "Invalid session ID"},
+        }
+    if not get_group(get_user_group(session_id))["operations"]:
+        return {"code": 403, "success": False, "data": {"message": "Not allowed"}}
+    conn = sqlite3.connect(database)
+    c = conn.cursor()
+    c.execute("SELECT * FROM groups WHERE name=?", (name,))
+    if not c.fetchone():
+        return {
+            "code": 404,
+            "success": False,
+            "data": {"message": "Group not found"},
+        }
+    c.execute("DELETE FROM groups WHERE name=?", (name,))
+    conn.commit()
+    conn.close()
+    return {"code": 200, "success": True, "data": {"message": "Group deleted"}}
+
+
 @app.route("/api/v1/session/verify", methods=["GET"])
 def session_verify():
     try:
