@@ -539,6 +539,7 @@
         $("#fileInput").click();
     });
     $("#fileInput").on("input", () => {
+        filesByhand = null;
         $("#upload_modal")
             .modal({
                 blurring: true,
