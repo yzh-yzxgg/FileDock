@@ -6,6 +6,7 @@
     <script>
         var user_type = 0;
 
+        var filesByhand = null;
         function timestampToYMD(timestamp) {
             var date = new Date(timestamp * 1000);
             var year = date.getFullYear();
@@ -88,8 +89,14 @@
         };
 
         var uploadFile = (keep_time) => {
-            fileInput = document.getElementById("fileInput");
-            file = fileInput.files[0];
+            if(filesByhand!=null) {
+                file=filesByhand[0];
+                filesByhand = null;
+            }
+            else {
+                fileInput = document.getElementById("fileInput");
+                file = fileInput.files[0];
+            }
             file_name = file.name;
             formData = new FormData();
             formData.append("fileInput", file);
@@ -485,6 +492,33 @@
         $("#fileInput").click();
     });
     $("#fileInput").on("input", () => {
+        $("#upload_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    });
+    $(document).on("dragover", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    $(document).on("dragleave", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    $(document).on("drop", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    
+        filesByhand = e.originalEvent.dataTransfer.files;
+        console.log(filesByhand);
+        if (e.originalEvent.dataTransfer.files.length > 1) {
+            alert("单次只能上传一个文件");
+            return;
+        }
         $("#upload_modal")
             .modal({
                 blurring: true,
