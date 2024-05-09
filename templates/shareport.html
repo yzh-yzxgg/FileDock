@@ -2,11 +2,14 @@
 <html lang="zh_cn">
 <head>
     {% include 'head.html' %}
-    <title>FileDock</title>    
+    <title id="shareport_title">FileDock</title>
+    <script>
+        window.shareportname = "{{shareportname}}";
+    </script>
     <script>
         var user_type = 0;
-
         var filesByhand = null;
+        var shareportid = "{{shareportid}}";
         function timestampToYMD(timestamp) {
             var date = new Date(timestamp * 1000);
             var year = date.getFullYear();
@@ -101,15 +104,11 @@
             formData = new FormData();
             formData.append("fileInput", file);
             formData.append("keep_time", keep_time * 24 * 60 * 60);
-            // fetch /api/v1/shareport/list -> Shareports that user has already joined
-            // if select_shareport then {
-            //     shareport_uuid;
-            //     formData.append("shareport", shareport_uuid);
-            // } else {
-            //     Do nothing;
-            // }
+            formData.append("shareport", shareportid);
+            formData.append("receive_user", 0);
             fileInput.value = null;
             var headers = {};
+            console.log(shareportid);
             if ($.cookie("session_id") != undefined) {
                 headers["X-Session-ID"] = $.cookie("session_id");
             }
@@ -121,7 +120,7 @@
                 processData: false,
                 contentType: false,
             }).done((response) => {
-                if (response.success) {
+                if (response.success) { 
                     $("#upload_modal_second").modal("hide");
                     $("#upload_modal").modal("hide");
                     $("#upload_modal_button").removeClass("loading");
@@ -175,7 +174,7 @@
                 <td data-label="上传时间">${timestampToYMD(response.data.filemeta.upload_time)}</td>
                 <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.filemeta.code}</td>
                 <td data-label="操作">
-                  <button class="downloadbutton" onclick="downloadFileByClick('${response.data.task_uuid.toString()}')"><i id="${response.data.task_uuid.toString()}_icon" class="download blue icon"></i></button>
+                  <button class="downloadbutton" onclick="downloadFileByClick('${response.data.task_uuid.toString()}')"><i class="download icon"></i></button>
                 </td>
               </tr>
             `);
@@ -188,18 +187,49 @@
                 }
                 else {
                     $("#download_warning")[0].innerText = "* 请检查取件码是否正确";
-                    $("#download_by_code_button").removeClass("loading");
+                }
+            });
+        };
+        var shareportFileList = () => {
+            $("#download_list_modal")
+                .modal({
+                    blurring: true,
+                    observeChanges: true,
+                })
+                .modal("show");
+            $.ajax({
+                url: "/api/v1/shareport/files",
+                method: "POST",
+                timeout: 0,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-ID": $.cookie("session_id"),
+                },
+                data: JSON.stringify({
+                    uuid: shareportid,
+                }),
+            }).done((response) => {
+                if (response.success) {
+                    console.log(response);
+                    $("#download_list_modal tbody").empty();
+                    for (var i = response.data.files.length-1; i >= 0; i--) {
+                        $("#download_list_modal tbody").append(`
+                <tr>
+                  <td data-label="文件名">${response.data.files[i].filename}</td>
+                  <td data-label="上传时间">${timestampToYMD(response.data.files[i].upload_time)}</td>
+                  <td data-label="取件码" style="color: rgb(66, 145, 246)"">${response.data.files[i].code}</td>
+                  <td data-label="操作">
+                    <button class="downloadbutton_in_list" onclick="downloadFileInList(${response.data.files[i].code})"><i id="${response.data.files[i].code}_icon" class="download blue icon"></i></button>
+                    <button class="deletebutton" onclick="deleteFile('${response.data.files[i].uuid.toString()}')"><i class="close red icon"></i></button>
+                  </td>
+                </tr>
+              `);
+                    }
                 }
             });
         };
         var downloadFileByClick = (task_uuid) => {
-            console.log(task_uuid);
-            icon_id = task_uuid+"_icon";
-            console.log(icon_id);
-            $("#"+icon_id).removeClass("blue");            
-            $("#"+icon_id).removeClass("download");
-            $("#"+icon_id).addClass("green");
-            $("#"+icon_id).addClass("check");
+            console.log("click");
             window.location.href = "/api/v1/files/download?task_uuid=" + task_uuid;
         }
         var deleteFile = (task_uuid) => {
@@ -290,11 +320,11 @@
 <div class="app">
     <div class="mb-1 z-40 w-full">
         <div class="max-w-8xl mx-auto text-lg">
-          <div class="py-4 border-b border-slate-900/10 lg:px-1 lg:border-0 dark:border-slate-300/10 mx-4 lg:mx-0">
+          <div class="py-4 border-b border-slate-900/10 lg:px-8 lg:border-0 dark:border-slate-300/10 mx-4 lg:mx-0">
             <div class="flex justify-between items-center">
                 <div class="ui dropdown">
                     <input type="hidden" name="filters">
-                    <span class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-400 to-blue-400">FileDock</span>
+                    <span id="shareportname" class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-purple-500 to-purple-500">SharePort</span>
                     <div class="menu">
                         <div class="item" id="FileDock">
                             <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">FileDock</span>
@@ -382,7 +412,7 @@
             <div class="content">
                 <div class="flex flex-col items-center">
                     <p class="text-xl font-bold mb-20">
-                        您的文件 <span id="file_name_dispaly"></span> 已成功上传
+                        您的文件 <span id="file_name_dispaly"></span> 已成功上传至该 <span style="color: rgb(66, 145, 246);">SharePort</span>
                     </p>
                     <p class="mb-6">您的取件码：</p>
                     <div class="code_display font-bold mb-11">123456</div>
@@ -391,7 +421,7 @@
                         复制
                       </a>
                     </div> -->
-                    <p class="m-10">接收文件时请输入此取件码。</p>
+                    <p class="m-10">接收文件时请点击 <span style="color: rgb(66, 145, 246);">SharePort</span> 中的接收或请输入此取件码。</p>
                     <p class="mb-1">
                         由
                         <a
@@ -464,12 +494,30 @@
             </table>
         </div>
     </div>
-    <div class="flex flex-col items-end w-full">
-        {% include 'footer.html' %}
-    </div>
+</div>
+<div class="flex flex-col items-end w-full">
+    {% include 'footer.html' %}
 </div>
 </div>
 <script>
+    shareportid ="{{shareportid}}";
+    console.log(shareportid);
+    $.ajax({
+        url: "/api/v1/shareport/info",
+        method: "POST",
+        timeout: 0,
+        headers: {
+            "X-Session-ID": $.cookie("session_id"),
+            "Content-Type": "application/json",
+        },
+        data: JSON.stringify({
+            uuid: shareportid,
+        }),
+    }).done((response) => {
+        if (response.success) {
+            $("#shareportname")[0].innerText = "SharePort - "+response.data.name;
+        }
+    });
     $("#login_button")[0].addEventListener("click", () => {
         window.location.href = "/login";
     });
@@ -488,7 +536,6 @@
 </script>
 <script>
     $("#upload_button")[0].addEventListener("click", () => {
-        $("#upload_modal_button").removeClass("loading");
         $("#fileInput").click();
     });
     $("#fileInput").on("input", () => {
@@ -499,7 +546,7 @@
                 observeChanges: true,
             })
             .modal("show");
-    });
+    });    
     $(document).on("dragover", function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -548,13 +595,7 @@
         }
     );
     $("#download_button")[0].addEventListener("click", () => {
-        $("#download_warning")[0].innerText = "";
-        $("#download_modal_by_code")
-            .modal({
-                blurring: true,
-                observeChanges: true,
-            })
-            .modal("show");
+        shareportFileList();
     });
     $("#download_modal_by_code_close_button")[0].addEventListener("click", () => {
         $("#download_modal_by_code").modal("hide");
@@ -565,8 +606,6 @@
         $("#download_list_modal").modal("hide");
     });
     $("#download_by_code_button")[0].addEventListener("click", () => {
-        $("#download_by_code_button").removeClass("loading");
-        $("#download_by_code_button").addClass("loading");
         code = $("#download_modal_by_code input")[0].value;
         downloadByCode(code);
     });

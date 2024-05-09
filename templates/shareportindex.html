@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh_cn">
+<head>
+    {% include 'head.html' %}
+    <title>SharePort</title>
+    <script>
+    </script>
+</head>
+<body>
+<div class="app">
+    <div class="mb-1 z-40 w-full">
+        <div class="max-w-8xl mx-auto text-lg">
+          <div class="py-4 border-b border-slate-900/10 lg:px-1 lg:border-0 dark:border-slate-300/10 mx-4 lg:mx-0">
+            <div class="flex justify-between items-center">
+                <div class="ui dropdown">
+                    <input type="hidden" name="filters">
+                    <span id="shareportname" class="text-3xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-purple-500 to-purple-500">SharePort</span>
+                    <div class="menu">
+                        <div class="item" id="FileDock">
+                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">FileDock</span>
+                        </div>
+                        <div class="item" id="SharePort">
+                            <span class="text-xl w-52 font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">SharePort</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ui icon top pointing dropdown button">
+                    <i class="user circle icon"></i>
+                    <div class="menu">
+                        <div class="header hidden" id="display_username"></div>
+                        <div class="item" id="login_button">登录</div>
+                        <div class="item hidden" id="file_list_button">我的文件</div>
+                        <div class="item" id="exit_button">退出</div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="flex flex-col flex-grow items-center" style="width: 90%;">
+        <div class="flex justify-end">
+            <a class="ui primary button labeled icon" role="button" onclick="display_join_modal()"><i aria-hidden="true" class="plus icon"></i>加入&nbsp;SharePort</a>
+            <a class="ui primary button labeled icon" role="button" onclick="display_create_modal()"><i aria-hidden="true" class="plus icon"></i>创建&nbsp;SharePort</a>
+        </div>
+        <table class="ui celled striped table" id="user_list">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>SharePort</th>
+                <th>SharePort&nbsp;id</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div id="join_shareport_modal" class="ui tiny modal">
+            <div class="header">
+                <div class="flex items-center">
+                    <button
+                            class="close icon button"
+                            id="create_user_modal_close_button"
+                    >
+                        <i class="close icon"></i>
+                    </button>
+                    <h3 class="ml-2">加入&nbsp;SharePort</h3>
+                </div>
+            </div>
+            <div class="content">
+                <div class="flex flex-col items-center">
+                    <p class="text-xl font-bold mb-4">
+                    </p>
+                    <div class="ui form mb-6 w-full">
+                        <div class="huge field">
+                            <label>SharePort&nbsp;id</label>
+                            <input id="new_shareportname" class="flex content-between sp" type="text"/>
+                        </div>
+                        <div class="huge field">
+                            <label>密码</label>
+                            <input id="new_shareportpassword" class="flex content-between sp"  type="text"/>
+                        </div>
+                        <p class="mb-6" id="join_passward_warning" style="color: red;"></p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button class="ui button blue text-xl" id="create_user_button" onclick="joinSharePort()">
+                            加入
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="ceeate_shareport_modal" class="ui tiny modal">
+            <div class="header">
+                <div class="flex items-center">
+                    <button
+                            class="close icon button"
+                            id="create_user_modal_close_button"
+                    >
+                        <i class="close icon"></i>
+                    </button>
+                    <h3 class="ml-2">创建&nbsp;SharePort</h3>
+                </div>
+            </div>
+            <div class="content">
+                <div class="flex flex-col items-center">
+                    <p class="text-xl font-bold mb-4">
+                    </p>
+                    <div class="ui form mb-6 w-full">
+                        <div class="huge field">
+                            <label>SharePort&nbsp;名字</label>
+                            <input id="create_new_username" class="flex content-between sp" type="text"/>
+                        </div>
+                        <div class="huge field">
+                            <label>密码</label>
+                            <input id="create_new_password" class="flex content-between"  type="text"/>
+                        </div>
+                        <div class="huge field">
+                            <label>重复密码</label>
+                            <input id="create_repeate_password" class="flex content-between"  type="text"/>
+                        </div>
+                        <p class="mb-6" id="create_passward_warning" style="color: red;"></p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button class="ui button blue text-xl" id="create_user_button" onclick="createSharePort()">
+                            创建
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="change_shareport_password_modal" class="ui tiny modal">
+            <div class="header">
+                <div class="flex items-center">
+                    <button
+                            class="close icon button"
+                            id="change_shareport_password_modal_close_button"
+                    >
+                        <i class="close icon"></i>
+                    </button>
+                    <h3 class="ml-2">修改密码</h3>
+                </div>
+            </div>
+            <div class="content">
+                <div class="flex flex-col items-center">
+                    <p class="text-xl font-bold mb-4">
+                    </p>
+                    <div class="ui form mb-6 w-full">
+                        <div class="huge field">
+                            <label>密码</label>
+                            <input id="change_password" class="flex content-between"  type="text"/>
+                        </div>
+                        <div class="huge field">
+                            <label>重复密码</label>
+                            <input id="change_repeate_password" class="flex content-between"  type="text"/>
+                        </div>
+                        <p class="mb-6" id="create_passward_warning" style="color: red;"></p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <button class="ui button blue text-xl" id="change_password_button" onclick="changePasswordBt()">
+                            保存
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="flex flex-col items-end w-full">
+    {% include 'footer.html' %}
+</div>
+</div>
+<script>
+    var user_exit = (session_id) => {
+        var cookies = document.cookie.split(";");
+        
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            $.removeCookie(name);
+        }
+        $.ajax({
+            url: "/api/v1/user/logout",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "Content-Type": "application/json",
+                "X-Session-ID": session_id,
+            },
+        }).done((response) => {
+        });
+    };
+    $("#login_button")[0].addEventListener("click", () => {
+        window.location.href = "/login";
+    });
+    $("#exit_button")[0].addEventListener("click", () => {
+        user_exit($.cookie(""));
+        $.removeCookie("uid");
+        $.removeCookie("session_id");
+        window.location.reload();
+    });
+    $('#FileDock').click(function() {
+        window.location.href = "/";
+    });
+    $('#SharePort').click(function() {
+        window.location.href = "/shareport";
+    });
+</script>
+<script>
+    var display_join_modal = () => {
+        $("#join_shareport_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
+    var deleteSharePort = (uuid) => {
+        console.log(uuid);
+        $.ajax({
+            url: "/api/v1/shareport/leave",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uuid: uuid,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+        });
+    };
+    var uuidquanju;
+    var changeSpPassword = (uuid) => {
+        uuidquanju = uuid;
+        $("#change_shareport_password_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    }
+    var changePasswordBt = () => {
+        var password = $("#change_password")[0].value;
+        var repeatPassword = $("#change_repeate_password")[0].value;
+        if (password !== repeatPassword) {
+            $("#create_passward_warning")[0].innerText = "* 两次输入的密码不一致";
+            return;
+        }
+        $.ajax({
+            url: "/api/v1/shareport/update",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uuid: uuidquanju,
+                password: password,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+            else {
+                $("#create_passward_warning")[0].innerText = "* " + response.data.message;
+            }
+        });
+    }
+    var display_create_modal = () => {
+        $("#ceeate_shareport_modal")
+            .modal({
+                blurring: true,
+                observeChanges: true,
+            })
+            .modal("show");
+    };
+    var displaySharePortList = () =>{
+        $.ajax({
+            url: "/api/v1/shareport/list",
+            method: "GET",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+        }).done((response) => {
+            if (response.success) {
+                console.log(response.data);
+                var shareport_list = response.data.shareports;
+                var tbody = $("#user_list tbody")[0];
+                tbody.innerHTML = "";
+                for (var i = 0; i < shareport_list.length; i++) {
+                    var ls=shareport_list[i].uuid;
+                    var tr = `<tr>
+                        <td>${i + 1}</td>
+                        <td>${shareport_list[i].name}</td>
+                        <td>${shareport_list[i].uuid}</td>
+                        <td>
+                            <button class="ui button blue text-xl" onclick="window.location.href = '/shareport/' + '${shareport_list[i].uuid}'">加入</button>
+                            <button class="ui button red text-xl" onclick="deleteSharePort('${shareport_list[i].uuid}')">删除</button>
+                            <button class="ui button hidden text-xl" onclick="changeSpPassword('${shareport_list[i].uuid}')" id="${shareport_list[i].uuid}_setup">设置</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += tr;
+                    if(shareport_list[i].list[0].uid == $.cookie("uid")){
+                        $(`#${shareport_list[i].uuid}_setup`)[0].classList.remove("hidden");
+                    }
+                }
+            }
+        });
+    };
+    var joinSharePort = () => {
+        var shareport_id = $("#new_shareportname")[0].value;
+        var password = $("#new_shareportpassword")[0].value;
+        $.ajax({
+            url: "/api/v1/shareport/join",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uuid: shareport_id,
+                password: password,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+            else {
+                $("#join_passward_warning")[0].innerText = "* " + response.data.message;
+            }
+        });
+    };
+    var createSharePort = () => {
+        var shareport_name = $("#create_new_username")[0].value;
+        var password = $("#create_new_password")[0].value;
+        var repeatPassword = $("#create_repeate_password")[0].value;
+        if (password !== repeatPassword) {
+            $("#create_passward_warning")[0].innerText = "* 两次输入的密码不一致";
+            return;
+        }
+        $.ajax({
+            url: "/api/v1/shareport/create",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "X-Session-ID": $.cookie("session_id"),
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                name: shareport_name,
+                password: password,
+            }),
+        }).done((response) => {
+            if (response.success) {
+                window.location.reload();
+            }
+            else {
+                $("#create_passward_warning")[0].innerText = "* " + response.data.message;
+            }
+        });
+    };
+</script>
+<script>
+    $(".ui.dropdown").dropdown();
+    displaySharePortList();
+    var display_username = () => {
+        disname_obj = $("#display_username")[0];
+        disname_obj.classList.remove("hidden");
+        disname_obj.classList.add("font-bold");
+        dislist_obj = $("#file_list_button")[0];
+        dislist_obj.classList.remove("hidden");
+        $.ajax({
+            url: "/api/v1/user/info",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                uid: $.cookie("uid"),
+            }),
+        }).done((response) => {
+            if (response.success) {
+                $("#display_username")[0].innerText = response.data.username;
+            }
+        });
+    };
+    if ($.cookie("uid") && $.cookie("session_id")) {
+        $.ajax({
+            url: "/api/v1/session/verify",
+            method: "GET",
+            timeout: 0,
+            headers: {
+                "Content-Type": "application/json",
+                "X-Session-ID": $.cookie("session_id"),
+            },
+        }).done((response) => {
+            if (response.success) {
+                $("#login_button")[0].classList.add("hidden");
+                if (response.data.group == "default") user_type = 1;
+                else if (response.data.group == "operator") user_type = -1;
+                display_username();
+            }
+        });
+    }
+    var copyCode = () => {
+        var codeDisplay = document.querySelector(".code_display");
+        var code = codeDisplay.innerText;
+        navigator.clipboard.writeText(code);
+    };
+</script>
+</body>
+</html>
